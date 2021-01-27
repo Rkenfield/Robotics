@@ -18,4 +18,5 @@ RectangleArena {
 }
 E-puck {
   translation 1 0 0
+  controller "Lab2_StateController"
 }
