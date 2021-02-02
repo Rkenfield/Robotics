@@ -31,7 +31,7 @@ rightMotor.setPosition(float('inf'))
 leftMotor.setVelocity(0.0)
 rightMotor.setVelocity(0.0)
 count = 0
-state = 1
+state = 0
 # Main loop:
 # - perform simulation steps until Webots is stopping the controller
 while robot.step(timestep) != -1:
@@ -52,7 +52,8 @@ while robot.step(timestep) != -1:
          rightSpeed = 1 * MAX_SPEED
        
     
-    if(forward_obstacle == True or state == 1):
+    if(forward_obstacle == True and state == 0 or state == 1):
+        #Handles the turn 180 state
         state = 1
         if(count <= 24):
             leftSpeed = 0.443 * MAX_SPEED
@@ -63,12 +64,22 @@ while robot.step(timestep) != -1:
         else:
             leftSpeed = 0
             rightSpeed = 0
-            state = 0
+            state = 2
             count = 0
      
-        
-        
-        
+    if(state == 2):
+        leftSpeed = 1 * MAX_SPEED
+        rightSpeed = 1 * MAX_SPEED
+        if(forward_obstacle):
+            #rotate clockwise until sensor ps5 reads > than 80
+            #when the left sensor reads > 80 set state to 3
+            print("rotateClockwise")
+    if(state == 3):
+        #implement drive until the left sensor no longer reads > 80 then set state to state 4        
+        print("drive until nothing to the left")
+    if(state == 4):
+        leftSpeed = 0
+        rightSpeed = 0
     leftMotor.setVelocity(leftSpeed)
     rightMotor.setVelocity(rightSpeed)
     
