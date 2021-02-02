@@ -20,3 +20,8 @@ E-puck {
   translation 1 0 0
   controller "Lab2_StateController"
 }
+#Obstacle 1
+WoodenBox {
+size 0.05 0.05 0.05
+translation 1 0.025 -0.15
+}
