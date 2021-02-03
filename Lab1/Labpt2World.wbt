@@ -20,13 +20,10 @@ E-puck {
   translation 1 0 0
   controller "Lab2_StateController"
 }
-#Obstacle 1
 WoodenBox {
-size 0.05 0.05 0.05
-translation 1 0.025 -0.15
+  translation 1 0.025 -0.15
+  size 0.05 0.05 0.05
 }
-
-#Obstacle 2
 DEF Obstacle_2 Solid {
   translation 0.97742 -0.01 0.725889
   children [
@@ -41,4 +38,8 @@ DEF Obstacle_2 Solid {
       }
     }
   ]
+  boundingObject Cylinder {
+    height 0.1
+    radius 0.05
+  }
 }
