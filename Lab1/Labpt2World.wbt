@@ -24,22 +24,7 @@ WoodenBox {
   translation 1 0.025 -0.15
   size 0.05 0.05 0.05
 }
-DEF Obstacle_2 Solid {
-  translation 0.97742 -0.01 0.725889
-  children [
-    DEF Obstacle_2 Shape {
-      appearance PBRAppearance {
-        baseColor 0 1 0.924559
-        metalness 0
-      }
-      geometry DEF Cone_O2 Cone {
-        bottomRadius 0.2
-        height 0.5
-      }
-    }
-  ]
-  boundingObject Cylinder {
-    height 0.1
-    radius 0.05
-  }
+PlasticCrate {
+  translation 1 0 1
+  size 0.05 0.05 0.05
 }

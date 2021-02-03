@@ -73,21 +73,29 @@ while robot.step(timestep) != -1:
         if(forward_obstacle):
             #rotate clockwise until sensor ps5 reads > than 80
             #when the left sensor reads > 80 set state to 3
-            if(psValues[5] < 80):
+            #if(forward_obstacle < 80):
                 #wb_motor_set_velocity(left_motor, MAX_SPEED)
                 #wb_motor_set_velocity(right_motor, -MAX_SPEED)
-                leftSpeed = 1 * MAX_SPEED
-                rightSpeed = -1 * MAX_SPEED
+            leftSpeed = 1 * MAX_SPEED
+            rightSpeed = -1 * MAX_SPEED
+            
                 
             #when the left sensor reads > 80 set state to 3
-            if (psValues[5] > 80):
+            if (psValues[5] > 60):
                 leftSpeed = 0
                 rightSpeed = 0
                 state = 3
-         
+                
+        
     if(state == 3):
         #implement drive until the left sensor no longer reads > 80 then set state to state 4        
-        print("drive until nothing to the left")
+        if(psValues[5] > 60):
+            leftSpeed = 1 * MAX_SPEED
+            rightSpeed = 1 * MAX_SPEED
+        else: 
+            state = 4
+             
+            
     if(state == 4):
         leftSpeed = 0
         rightSpeed = 0
