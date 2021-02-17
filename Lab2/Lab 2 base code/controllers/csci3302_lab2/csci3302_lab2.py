@@ -89,12 +89,13 @@ while robot.step(SIM_TIMESTEP) != -1:
     
     if(gsr[1] < 302 and gsr[0] < 302 and gsr[2] < 302):
         if(count >= 12):
-            vL = 0
-            vR = 0 
+            vL = .5 * MAX_SPEED
+            vR = .5 * MAX_SPEED 
             odometer = [0,0,0]
             leftMotor.setVelocity(vL)
             rightMotor.setVelocity(vR)
-            break
+          
+            continue
             
         else:
             count = count + 1 
@@ -153,7 +154,7 @@ while robot.step(SIM_TIMESTEP) != -1:
     
     odometer = [X,Y,theta]
     
-    print(odometer)
+    #print(odometer)
     
     # TODO: Insert Loop Closure Code Here
     
