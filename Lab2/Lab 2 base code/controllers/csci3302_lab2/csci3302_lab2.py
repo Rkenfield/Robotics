@@ -58,7 +58,7 @@ for i in range(10): robot.step(SIM_TIMESTEP)
 vL = 0 # TODO: Initialize variable for left speed
 vR = 0 # TODO: Initialize variable for right speed
 
-
+count = 0
 # Main Control Loop:
 while robot.step(SIM_TIMESTEP) != -1:
 
@@ -83,25 +83,36 @@ while robot.step(SIM_TIMESTEP) != -1:
     # and test the robustness of your approach.
     #
     
-    # TODO: Insert Line Following Code Here                
-    if(gsr[1] < 350 and gsr[0] < 350 and gsr[2] < 350):
-        vL = 0
-        vR = 0
-        odometer = [0,0,0]
+    # TODO: Insert Line Following Code Here        
     
-    if(gsr[1] < 350):
-        vL = .5 * MAX_SPEED
-        vR = .5 * MAX_SPEED 
-    if(gsr[0] < 350):
-        vR = .25 * MAX_SPEED
-        vL = -0.1 * MAX_SPEED
-    if(gsr[2] < 350):
-        vL = .25 * MAX_SPEED
-        vR = -.1 * MAX_SPEED    
+    #This is the Loop enclosure code implemented with the line folowing behaviour!        
+    if(gsr[1] < 305 and gsr[0] < 305 and gsr[2] < 305):
+        if(count >= 6):
+            vL = .5 * MAX_SPEED
+            vR = .5 * MAX_SPEED 
+            odometer = [0,0,0]
+            print(odometer)
+        else:
+            count = count + 1 
         
     else:
-        vR = .25 * MAX_SPEED
-        vL = -.1 * MAX_SPEED
+      
+        count = 0
+        
+        #Line Following Code
+        if(gsr[1] < 350):     
+            vL = .5 * MAX_SPEED
+            vR = .5 * MAX_SPEED 
+        if(gsr[0] < 350):    
+            vR = .25 * MAX_SPEED
+            vL = -0.1 * MAX_SPEED
+        if(gsr[2] < 350):
+            vL = .25 * MAX_SPEED
+            vR = -.1 * MAX_SPEED    
+        
+        else:
+            vR = .25 * MAX_SPEED
+            vL = -.1 * MAX_SPEED
     
     # TODO: Call update_odometry Here
     
@@ -120,6 +131,8 @@ while robot.step(SIM_TIMESTEP) != -1:
     # about calculating odometry in the world coordinate system of the
     # Webots simulator first (x points down, y points right)
     
+    
+    #Odometer implementation
     T = SIM_TIMESTEP / 1000
     
     dX = ((((vL/MAX_SPEED) + (vR/MAX_SPEED)) * EPUCK_MAX_WHEEL_SPEED) / 2) * T  
@@ -135,7 +148,7 @@ while robot.step(SIM_TIMESTEP) != -1:
     
     odometer = [X,Y,theta]
     
-    #print(odometer)
+    print(odometer)
     
     # TODO: Insert Loop Closure Code Here
     
@@ -146,6 +159,7 @@ while robot.step(SIM_TIMESTEP) != -1:
     # 2) Use the pose when you encounter the line last 
     # for best results
     
+    #We implemented above along with the line following code
     
     
     #print("Current pose: [%5f, %5f, %5f]" % (pose_x, pose_y, pose_theta))
