@@ -99,7 +99,6 @@ while robot.step(SIM_TIMESTEP) != -1:
             
         else:
             count = count + 1 
-            print(count)
         
     else:
       
@@ -154,7 +153,7 @@ while robot.step(SIM_TIMESTEP) != -1:
     
     odometer = [X,Y,theta]
     
-    #print(odometer)
+    print(odometer)
     
     # TODO: Insert Loop Closure Code Here
     
