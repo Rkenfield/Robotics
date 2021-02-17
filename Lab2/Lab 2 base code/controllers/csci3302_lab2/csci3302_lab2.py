@@ -85,15 +85,20 @@ while robot.step(SIM_TIMESTEP) != -1:
     
     # TODO: Insert Line Following Code Here        
     
-    #This is the Loop enclosure code implemented with the line folowing behaviour!        
-    if(gsr[1] < 305 and gsr[0] < 305 and gsr[2] < 305):
-        if(count >= 6):
-            vL = .5 * MAX_SPEED
-            vR = .5 * MAX_SPEED 
+    #This is the Loop enclosure code implemented with the line folowing behaviour!      
+    
+    if(gsr[1] < 302 and gsr[0] < 302 and gsr[2] < 302):
+        if(count >= 12):
+            vL = 0
+            vR = 0 
             odometer = [0,0,0]
-            print(odometer)
+            leftMotor.setVelocity(vL)
+            rightMotor.setVelocity(vR)
+            break
+            
         else:
             count = count + 1 
+            print(count)
         
     else:
       
@@ -116,7 +121,7 @@ while robot.step(SIM_TIMESTEP) != -1:
     
     # TODO: Call update_odometry Here
     
-    # Hints:
+    # Hint1s:
     #
     # 1) Divide vL/vR by MAX_SPEED to normalize, then multiply with
     # the robot's maximum speed in meters per second. 
