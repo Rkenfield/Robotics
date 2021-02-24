@@ -76,11 +76,16 @@ while robot.step(timestep) != -1:
 
 
     #STEP 1: Calculate the error
-    Dist_Error = math.sqrt((goal_pos[0][0]-0) + (goal_pos[0][1] - 0))
-    print(Dist_Error)
+    Dist_Error = math.sqrt(((goal_pos[0][0]-pose_x)**2) + ((goal_pos[0][1] - pose_y)**2))
+   
+    Bearing_Error = math.atan2(pose_y,pose_x) - math.atan2(goal_pos[0][1],goal_pos[0][0]) 
 
+ 
     #STEP 2: Controller (with gains)
-
+    
+    #this will get the robot to stop when it reaches its goal on the x axis
+    vL = Dist_Error * MAX_SPEED
+    vR = Dist_Error * MAX_SPEED
     
     
     #STEP 3: Compute wheelspeeds
@@ -88,9 +93,7 @@ while robot.step(timestep) != -1:
     
 
     #STEP 4: Normalize wheelspeed
-    
-    vL = .5*MAX_SPEED
-    vR = .5*MAX_SPEED
+   
     
     ################# Do not modify this block of the code ########################
     # Odometry code. Don't change speeds after this
