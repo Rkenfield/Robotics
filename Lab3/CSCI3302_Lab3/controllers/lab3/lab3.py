@@ -26,6 +26,9 @@ part_names = ("head_2_joint", "head_1_joint", "torso_lift_joint", "arm_1_joint",
 target_pos = (0.0, 0.0, 0.09, 0.07, 0.26, -3.16, 1.27, 1.32, 0.0, 1.41, 'inf', 'inf')
 robot_parts = []
 
+
+
+
 for i in range(N_PARTS):
         robot_parts.append(robot.getDevice(part_names[i]))
         robot_parts[i].setPosition(float(target_pos[i]))
@@ -52,6 +55,8 @@ pose_theta = 0
 
 vL = 0
 vR = 0
+
+goal_pos = [[1.8,0]]
         
 while robot.step(timestep) != -1:
 
@@ -71,8 +76,8 @@ while robot.step(timestep) != -1:
 
 
     #STEP 1: Calculate the error
-
-    
+    Dist_Error = math.sqrt((goal_pos[0][0]-0) + (goal_pos[0][1] - 0))
+    print(Dist_Error)
 
     #STEP 2: Controller (with gains)
 
@@ -83,7 +88,10 @@ while robot.step(timestep) != -1:
     
 
     #STEP 4: Normalize wheelspeed
-
+    
+    vL = .5*MAX_SPEED
+    vR = .5*MAX_SPEED
+    
     ################# Do not modify this block of the code ########################
     # Odometry code. Don't change speeds after this
     pose_x += (vL+vR)/2/MAX_SPEED*MAX_SPEED_MS*timestep/1000.0*math.cos(pose_theta)
@@ -93,5 +101,6 @@ while robot.step(timestep) != -1:
     ##############################################################################
 
     # Enter here functions to send actuator commands
-   
+    robot_parts[MOTOR_LEFT].setVelocity(vL)
+    robot_parts[MOTOR_RIGHT].setVelocity(vR)  
     
