@@ -56,7 +56,20 @@ pose_theta = 0
 vL = 0
 vR = 0
 
-goal_pos = [[1.8,0]]
+gain = .3
+bearingGain = .1
+
+goal_pos = [[1.8,-1],[2,-3]]
+
+current = 0
+final = len(goal_pos)
+
+
+def clamp(b):
+    if(b * MAX_SPEED > MAX_SPEED):
+        return MAX_SPEED
+    else:
+        return b * MAX_SPEED
         
 while robot.step(timestep) != -1:
 
@@ -73,24 +86,45 @@ while robot.step(timestep) != -1:
     #for i in objects:
     #    print(i.get_model()) 
     ##########################################################################
-
-
-    #STEP 1: Calculate the error
-    Dist_Error = math.sqrt(((goal_pos[0][0]-pose_x)**2) + ((goal_pos[0][1] - pose_y)**2))
+    
    
-    Bearing_Error = math.atan2(pose_y,pose_x) - math.atan2(goal_pos[0][1],goal_pos[0][0]) 
+    
+    #STEP 1: Calculate the error
+    
+    Dist_Error = math.sqrt(((goal_pos[current][0]-pose_x)**2) + ((goal_pos[current][1] - pose_y)**2))
+   
+    Bearing_Error = pose_theta - math.atan2(goal_pos[current][1],goal_pos[current][0])
 
- 
+    
+   
+    print(Bearing_Error) 
+    
+    print(Dist_Error)
     #STEP 2: Controller (with gains)
     
-    #this will get the robot to stop when it reaches its goal on the x axis
-    vL = Dist_Error * MAX_SPEED
-    vR = Dist_Error * MAX_SPEED
-    
+    if(Bearing_Error < -bearingGain):
+        vL = MAX_SPEED
+        vR = 0    
+    elif(Bearing_Error > bearingGain):
+        vL = 0
+        vR = MAX_SPEED
+    else:
+        if(Dist_Error > gain):   
+            if(Dist_Error * MAX_SPEED > MAX_SPEED):
+                vL = MAX_SPEED
+                vR = MAX_SPEED
+            else:
+                vL = Dist_Error * MAX_SPEED
+                vR = Dist_Error * MAX_SPEED
+        else:
+        
+            vL = 0
+            vR = 0
+            current += 1
+        
     
     #STEP 3: Compute wheelspeeds
-    
-    
+ 
 
     #STEP 4: Normalize wheelspeed
    
@@ -106,4 +140,8 @@ while robot.step(timestep) != -1:
     # Enter here functions to send actuator commands
     robot_parts[MOTOR_LEFT].setVelocity(vL)
     robot_parts[MOTOR_RIGHT].setVelocity(vR)  
+    
+   
+        
+        
     
