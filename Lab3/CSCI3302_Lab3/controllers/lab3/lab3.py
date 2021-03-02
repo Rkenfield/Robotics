@@ -56,10 +56,10 @@ pose_theta = 0
 vL = 0
 vR = 0
 
-gain = .3
-bearingGain = .1
+gain = .25
+bearingGain = 0
 
-goal_pos = [[1.8,-1],[2,-3]]
+goal_pos = [[1.8,-1],[1.2,-2],[1,-2.5],[-.6,-2.6],[-.9,-3.5]]
 
 current = 0
 final = len(goal_pos)
@@ -87,44 +87,66 @@ while robot.step(timestep) != -1:
     #    print(i.get_model()) 
     ##########################################################################
     
-   
+    if(current  < final):
     
     #STEP 1: Calculate the error
     
-    Dist_Error = math.sqrt(((goal_pos[current][0]-pose_x)**2) + ((goal_pos[current][1] - pose_y)**2))
+        Dist_Error = math.sqrt(((pose_x - goal_pos[current][0])**2) + ((pose_y - (goal_pos[current][1]))**2))
    
-    Bearing_Error = pose_theta - math.atan2(goal_pos[current][1],goal_pos[current][0])
-
+        Bearing_Error = math.atan2((goal_pos[current][1] - pose_y) , (goal_pos[current][0] - pose_x)) - pose_theta 
     
    
-    print(Bearing_Error) 
+    #print(Bearing_Error) 
     
-    print(Dist_Error)
+    #print(Dist_Error)
     #STEP 2: Controller (with gains)
+        xR = Dist_Error * gain 
+        thetaR = (Bearing_Error * gain) 
+  
+  
+    #print(thetaR)  
+    #STEP 3: Compute wheelspeeds
     
-    if(Bearing_Error < -bearingGain):
-        vL = MAX_SPEED
-        vR = 0    
-    elif(Bearing_Error > bearingGain):
-        vL = 0
-        vR = MAX_SPEED
-    else:
-        if(Dist_Error > gain):   
-            if(Dist_Error * MAX_SPEED > MAX_SPEED):
-                vL = MAX_SPEED
-                vR = MAX_SPEED
-            else:
-                vL = Dist_Error * MAX_SPEED
-                vR = Dist_Error * MAX_SPEED
-        else:
+        if(Dist_Error > gain):
+            if(Bearing_Error < -.1):
+                vL = 0
+            
+            
+                if(thetaR * MAX_SPEED > MAX_SPEED):
+                    vR = MAX_SPEED
+                else:
+                    vR = abs(thetaR * MAX_SPEED)
+                
+                
+                  
+            elif(Bearing_Error > .1):
+                vR = 0
         
+                if(thetaR * MAX_SPEED > MAX_SPEED):
+                    vL = MAX_SPEED
+                else:
+                    vL = abs(thetaR * MAX_SPEED)
+                
+            
+            
+            
+            else:    
+                if(xR*MAX_SPEED > MAX_SPEED):
+                    vL = MAX_SPEED
+                    vR = MAX_SPEED
+                else:
+                    vL = xR*MAX_SPEED
+                    vR = xR*MAX_SPEED
+        else:
             vL = 0
             vR = 0
-            current += 1
         
-    
-    #STEP 3: Compute wheelspeeds
- 
+            current+=1
+        
+    else:
+       vL = 0
+       vR = 0  
+   
 
     #STEP 4: Normalize wheelspeed
    
