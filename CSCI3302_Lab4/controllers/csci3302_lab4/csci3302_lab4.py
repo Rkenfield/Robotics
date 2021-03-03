@@ -63,7 +63,16 @@ lidar.enablePointCloud()
 # array that contains all the angles is to use linspace from
 # the numpy package.
 
+lidar_sensor_readings = lidar.getRangeImage()
+lOffsets = []
+lAngle =  LIDAR_ANGLE_BINS / LIDAR_ANGLE_RANGE
+count = -10
 
+for i in range (21):
+    if i == 10:
+       lOffsets.append(0)
+    else:
+        lOffsets.append((count + i) * lAngle)
 
 #### End of Part 1 #####
  
@@ -87,8 +96,9 @@ while robot.step(SIM_TIMESTEP) != -1:
     # Come up with a way to turn the robot pose (in world coordinates)
     # into coordinates on the map. Draw a red dot using display.drawPixel()
     # wherehere the robot moves.
+    display.setColor(0XFF0000)
+    display.drawPixel(int(pose_x*300),int(pose_y*300))
     
-
     
     
     ##### Part 3: Convert Lidar data into world coordinates
@@ -99,9 +109,16 @@ while robot.step(SIM_TIMESTEP) != -1:
     # rx and ry into world coordinates wx and wy. This lab uses
     # the Webots coordinate system (except that we use Y instead of Z).
     # The arena is 1x1m2 and its origin is in the top left of the arena. 
-    
-
-    
+    for i in range(21):
+        if(lidar_sensor_readings[i] != inf):
+            tr = lOffsets[i]
+            xr = cos(tr)*lidar_sensor_readings[i] 
+            yr = sin(tr)*lidar_sensor_readings[i] 
+            
+            wx = xr + pose_x
+            wy = yr + pose_y 
+            
+            display.drawLine(pose_x,pose_y,wx,wy)      
     
     ##### Part 4: Draw the obstacle and free space pixels on the map
  
