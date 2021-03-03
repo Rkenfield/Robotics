@@ -65,12 +65,6 @@ current = 0
 final = len(goal_pos)
 
 
-def clamp(b):
-    if(b * MAX_SPEED > MAX_SPEED):
-        return MAX_SPEED
-    else:
-        return b * MAX_SPEED
-        
 while robot.step(timestep) != -1:
 
     ## webots offer builtin object detectors which will not be used in Lab 3 ###
