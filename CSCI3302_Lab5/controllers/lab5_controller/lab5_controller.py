@@ -127,10 +127,11 @@ if mode == 'planner':
 
 
 # Part 1.2: Map Initialization
+map = np.zeros((360,360))
 
 # Initialize your map data structure here as a 2D floating point array
 if mode == 'manual':
-    map = None # Replace None by a numpy 2D floating point array
+    map = np.zeros((360,360)) # Replace None by a numpy 2D floating point array
 
 
 if mode == 'autonomous':
@@ -176,8 +177,25 @@ while robot.step(timestep) != -1 and mode != 'planner':
 
             # You will eventually REPLACE the following 2 lines with a more robust version of map
             # and gray drawing that has more levels than just 0 and 1.
-            display.setColor(0xFFFFFF)
-            display.drawPixel(360-int(wy*30),int(wx*30))
+            
+            # display.setColor(0xFFFFFF)
+            # display.drawPixel(360-int(wy*30),int(wx*30))
+            
+            if(360-int(wy*30)-1 < 360 and int(wx*30)-1 < 360):
+            
+                if(map[360-int(wy*30)-1][int(wx*30)-1] + .01 <= 1):
+            
+                    map[360-int(wy*30)-1][int(wx*30)-1] = map[360-int(wy*30)-1][int(wx*30)-1] + .01  
+                 
+                else:
+            
+                    map[360-int(wy*30)-1][int(wx*30)-1] = 1
+            
+                if(map[360-int(wy*30)-1][int(wx*30)-1] >.5):
+            
+                    display.setColor( int(((map[360-int(wy*30)-1][int(wx*30)-1]*256)**2) + (map[360-int(wy*30)-1][int(wx*30)-1]*256) +  map[360-int(wy*30)-1][int(wx*30)-1]))
+                    display.drawPixel(360-int(wy*30),int(wx*30))
+
 
     display.setColor(int(0xFF0000))
     display.drawPixel(360-int(pose_y*30),int(pose_x*30))
