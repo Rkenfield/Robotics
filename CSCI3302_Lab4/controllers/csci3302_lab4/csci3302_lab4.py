@@ -65,17 +65,20 @@ lidar.enablePointCloud()
 
 lidar_sensor_readings = lidar.getRangeImage()
 lOffsets = []
-lAngle =  LIDAR_ANGLE_BINS / LIDAR_ANGLE_RANGE
+lAngle =   LIDAR_ANGLE_RANGE / LIDAR_ANGLE_BINS
 count = -10
 
 for i in range (21):
     if i == 10:
        lOffsets.append(0)
     else:
-        lOffsets.append(((count + i) * lAngle)*(math.pi/180))
+        lOffsets.append((count + i) * lAngle)
+        
    
 #### End of Part 1 #####
  
+ 
+
 # Main Control Loop:
 while robot.step(SIM_TIMESTEP) != -1:     
     
@@ -113,24 +116,27 @@ while robot.step(SIM_TIMESTEP) != -1:
     
     for i in range(len(lidar_sensor_readings)):
         #print(lidar_sensor_readings[i])
-        if(lidar_sensor_readings[i] != float("inf")):
-            tr = lOffsets[i]
-            xr = math.cos(tr)* lidar_sensor_readings[i]
-            yr = math.sin(tr)* lidar_sensor_readings[i]
+        tr = -lOffsets[i]
+        if(lidar_sensor_readings[i] == float("inf")):
+            temp = LIDAR_SENSOR_MAX_RANGE
+        else:
+            temp = lidar_sensor_readings[i]
             
-            wx = (xr*math.cos((pose_theta) - (math.pi/2))) + (xr*math.sin((pose_theta) - (math.pi/2))) + pose_x
-            wy = (yr*math.cos(pose_theta)) + (yr*math.sin(pose_theta)) + pose_y
+        xr = math.sin(tr)* temp
+        yr = math.cos(tr)* temp
             
-            #wx = (math.cos((pose_theta) - (math.pi/2)) * xr) + pose_x
-            #wy = ((math.sin((pose_theta)) * yr)) + pose_y
-            
-            #display.setColor(0XFFFFFF)
-            #display.drawLine(int(pose_x*300),int(pose_y*300),int(wx*300),int(wy*300))      
-            
-            display.setColor(0X0000FF)
-            display.drawPixel(int(wx*300),int( wy*300))
-     
-           
+        wx = (xr*math.cos(pose_theta)) + (yr*math.sin(pose_theta)) + pose_x
+        wy = (yr*math.cos(pose_theta)) - (xr*math.sin(pose_theta)) + pose_y
+        
+       
+        
+        display.setColor(0XFFFFFF)
+        display.drawLine(int(pose_x*300),int(pose_y*300),int(wx*300),int(wy*300))      
+        
+        display.setColor(0X0000FF)
+        display.drawPixel(int(wx*300),int( wy*300))
+    
+               
             
     ##### Part 4: Draw the obstacle and free space pixels on the map
  
