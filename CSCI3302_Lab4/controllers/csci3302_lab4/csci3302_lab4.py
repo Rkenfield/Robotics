@@ -72,8 +72,8 @@ for i in range (21):
     if i == 10:
        lOffsets.append(0)
     else:
-        lOffsets.append((count + i) * lAngle)
-
+        lOffsets.append(((count + i) * lAngle)*(math.pi/180))
+   
 #### End of Part 1 #####
  
 # Main Control Loop:
@@ -90,7 +90,7 @@ while robot.step(SIM_TIMESTEP) != -1:
     # Read Lidar           
     lidar_sensor_readings = lidar.getRangeImage()
     
-    
+   
     ##### Part 2: Turn world coordinates into map coordinates
     #
     # Come up with a way to turn the robot pose (in world coordinates)
@@ -108,18 +108,30 @@ while robot.step(SIM_TIMESTEP) != -1:
     # hits the object in the robot coordinate system. Then convert
     # rx and ry into world coordinates wx and wy. This lab uses
     # the Webots coordinate system (except that we use Y instead of Z).
-    # The arena is 1x1m2 and its origin is in the top left of the arena. 
-    for i in range(21):
-        if(lidar_sensor_readings[i] != inf):
-            tr = lOffsets[i]
-            xr = cos(tr)*lidar_sensor_readings[i] 
-            yr = sin(tr)*lidar_sensor_readings[i] 
-            
-            wx = xr + pose_x
-            wy = yr + pose_y 
-            
-            display.drawLine(pose_x,pose_y,wx,wy)      
+    # The arena is 1x1m2 and its origin is in the top left of the arena.
     
+    
+    for i in range(len(lidar_sensor_readings)):
+        #print(lidar_sensor_readings[i])
+        if(lidar_sensor_readings[i] != float("inf")):
+            tr = lOffsets[i]
+            xr = math.cos(tr)* lidar_sensor_readings[i]
+            yr = math.sin(tr)* lidar_sensor_readings[i]
+            
+            wx = (xr*math.cos((pose_theta) - (math.pi/2))) + (xr*math.sin((pose_theta) - (math.pi/2))) + pose_x
+            wy = (yr*math.cos(pose_theta)) + (yr*math.sin(pose_theta)) + pose_y
+            
+            #wx = (math.cos((pose_theta) - (math.pi/2)) * xr) + pose_x
+            #wy = ((math.sin((pose_theta)) * yr)) + pose_y
+            
+            #display.setColor(0XFFFFFF)
+            #display.drawLine(int(pose_x*300),int(pose_y*300),int(wx*300),int(wy*300))      
+            
+            display.setColor(0X0000FF)
+            display.drawPixel(int(wx*300),int( wy*300))
+     
+           
+            
     ##### Part 4: Draw the obstacle and free space pixels on the map
  
     
@@ -128,7 +140,8 @@ while robot.step(SIM_TIMESTEP) != -1:
     
  
 
-    
+    display.setColor(0XFF0000)
+    display.drawPixel(int(pose_x*300),int(pose_y*300))    
     # DO NOT MODIFY THE FOLLOWING CODE
     #####################################################
     #                 Robot controller                  #
@@ -173,4 +186,4 @@ while robot.step(SIM_TIMESTEP) != -1:
     pose_theta += (dsr-dsl)/EPUCK_AXLE_DIAMETER
     
     # Feel free to uncomment this for debugging
-    #print("X: %f Y: %f Theta: %f " % (pose_x,pose_y,pose_theta))
+   # print("X: %f Y: %f Theta: %f " % (pose_x,pose_y,pose_theta))
