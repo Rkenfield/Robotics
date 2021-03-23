@@ -93,8 +93,8 @@ compass.enable(timestep)
 ###################
 if mode == 'planner':
 # Part 2.3: Provide start and end in world coordinate frame and convert it to map's frame
-    start_w = None # (Pose_X, Pose_Z) in meters
-    end_w = None # (Pose_X, Pose_Z) in meters
+    start_w = (2.58,8.9) # (Pose_X, Pose_Z) in meters
+    end_w = (7.5,1.34) # (Pose_X, Pose_Z) in meters
 
     # Convert the start_w and end_W from webot's coordinate frame to map's
     start = None # (x, y) in 360x360 map
@@ -112,12 +112,21 @@ if mode == 'planner':
 
 
 # Part 2.1: Load map (map.npy) from disk and visualize it
-
-
-
+    map = np.load("map.npy")
+    nmap = np.rot90(map,1,(1,0))
+ 
+    nmap[nmap>.5] = 1
+    nmap[nmap<=.5] = 0
+    #plt.imshow(nmap)
+    #plt.show()
+ 
 # Part 2.2: Compute an approximation of the “configuration space”
-
-
+    
+    filter = np.ones((7,7))
+    cmap = convolve2d(nmap,filter)
+    cmap[cmap>=1] = 1
+    plt.imshow(cmap)
+    plt.show()
 
 # Part 2.3 continuation: Call path_planner
 
@@ -192,11 +201,15 @@ while robot.step(timestep) != -1 and mode != 'planner':
                     map[360-int(wy*30)-1][int(wx*30)-1] = 1
             
                 if(map[360-int(wy*30)-1][int(wx*30)-1] >.5):
-            
-                    display.setColor( int(((map[360-int(wy*30)-1][int(wx*30)-1]*256)**2) + (map[360-int(wy*30)-1][int(wx*30)-1]*256) +  map[360-int(wy*30)-1][int(wx*30)-1]))
+                
+                    map[360-int(wy*30)-1][int(wx*30)-1] = 1
+                    display.setColor( int((((map[360-int(wy*30)-1][int(wx*30)-1]*256)**2) + (map[360-int(wy*30)-1][int(wx*30)-1]*256) +  map[360-int(wy*30)-1][int(wx*30)-1])*255))
                     display.drawPixel(360-int(wy*30),int(wx*30))
-
-
+                    
+                else:
+                
+                    map[360-int(wy*30)-1][int(wx*30)-1] = 0
+                    
     display.setColor(int(0xFF0000))
     display.drawPixel(360-int(pose_y*30),int(pose_x*30))
 
@@ -227,7 +240,7 @@ while robot.step(timestep) != -1 and mode != 'planner':
             vR = 0
         elif key == ord('S'):
 # Part 1.4: Save map to disc
-
+            np.save('map.npy',map)
             print("Map file saved")
         elif key == ord('L'):
             # You will not use this portion but here's an example for loading saved a numpy array
@@ -258,7 +271,7 @@ while robot.step(timestep) != -1 and mode != 'planner':
     pose_y -= (vL+vR)/2/MAX_SPEED*MAX_SPEED_MS*timestep/1000.0*math.sin(pose_theta)
     pose_theta += (vR-vL)/AXLE_LENGTH/MAX_SPEED*MAX_SPEED_MS*timestep/1000.0
 
-    # print("X: %f Z: %f Theta: %f" % (pose_x, pose_y, pose_theta)) #/3.1415*180))
+    print("X: %f Z: %f Theta: %f" % (pose_x, pose_y, pose_theta)) #/3.1415*180))
 
     # Actuator commands
     robot_parts[MOTOR_LEFT].setVelocity(vL)
