@@ -72,7 +72,7 @@ vR = 0
 
 ##################### IMPORTANT #####################
 # Set the mode here. Please change to 'autonomous' before submission
-mode = 'manual' # Part 1.1: manual mode
+mode = 'planner' # Part 1.1: manual mode
 # mode = 'planner'
 # mode = 'autonomous'
 
@@ -97,18 +97,22 @@ if mode == 'planner':
     end_w = (7.5,1.34) # (Pose_X, Pose_Z) in meters
 
     # Convert the start_w and end_W from webot's coordinate frame to map's
-    start = None # (x, y) in 360x360 map
-    ens = None # (x, y) in 360x360 map
+    start = (int(start_w[0]*30),(360-int(start_w[1]*30))) # (x, y) in 360x360 map
+    ens = (int(end_w[0]*30),(360-int(end_w[1]*30))) # (x, y) in 360x360 map
+    
+    #display.setColor(int(0xFF0000))
+   # display.drawPixel((360-int(end_w[1]*30)),int(end_w[0]*30))
+
 
 # Part 2.3: Implement A* or Dijkstra's
     def path_planner(map, start, end):
-        '''
-        :param map: A 2D numpy array of size 360x360 representing the world's cspace with 0 as free space and 1 as obstacle
-        :param start: A tuple of indices representing the start cell in the map
-        :param end: A tuple of indices representing the end cell in the map
-        :return: A list of tuples as a path from the given start to the given end in the given maze
-        '''
-        pass
+        
+        #:param map: A 2D numpy array of size 360x360 representing the world's cspace with 0 as free space and 1 as obstacle
+        #:param start: A tuple of indices representing the start cell in the map
+        #:param end: A tuple of indices representing the end cell in the map
+        #:return: A list of tuples as a path from the given start to the given end in the given maze
+          
+        
 
 
 # Part 2.1: Load map (map.npy) from disk and visualize it
@@ -271,7 +275,7 @@ while robot.step(timestep) != -1 and mode != 'planner':
     pose_y -= (vL+vR)/2/MAX_SPEED*MAX_SPEED_MS*timestep/1000.0*math.sin(pose_theta)
     pose_theta += (vR-vL)/AXLE_LENGTH/MAX_SPEED*MAX_SPEED_MS*timestep/1000.0
 
-    print("X: %f Z: %f Theta: %f" % (pose_x, pose_y, pose_theta)) #/3.1415*180))
+    #print("X: %f Z: %f Theta: %f" % (pose_x, pose_y, pose_theta)) #/3.1415*180))
 
     # Actuator commands
     robot_parts[MOTOR_LEFT].setVelocity(vL)
