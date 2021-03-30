@@ -67,12 +67,16 @@ pose_x     = 2.58
 pose_y     = 8.9
 pose_theta = 0
 
+#pose_x     = 4.46793
+#pose_y     = 8.05675
+#pose_theta = 0
+
 vL = 0
 vR = 0
 
 ##################### IMPORTANT #####################
 # Set the mode here. Please change to 'autonomous' before submission
-mode = 'planner' # Part 1.1: manual mode
+mode = 'autonomous' # Part 1.1: manual mode
 # mode = 'planner'
 # mode = 'autonomous'
 
@@ -93,17 +97,35 @@ compass.enable(timestep)
 ###################
 if mode == 'planner':
 # Part 2.3: Provide start and end in world coordinate frame and convert it to map's frame
-    start_w = (2.58,8.9) # (Pose_X, Pose_Z) in meters
-    end_w = (7.5,1.34) # (Pose_X, Pose_Z) in meters
+    start_w = (pose_x,pose_y) # (Pose_X, Pose_Z) in meters
+    end_w = (10,7) # (Pose_X, Pose_Z) in meters
 
     # Convert the start_w and end_W from webot's coordinate frame to map's
-    start = (int(start_w[0]*30),(360-int(start_w[1]*30))) # (x, y) in 360x360 map
-    ens = (int(end_w[0]*30),(360-int(end_w[1]*30))) # (x, y) in 360x360 map
+    start = (int(start_w[0]*30)-1,(360-int(start_w[1]*30)-1)) # (x, y) in 360x360 map
+    end = (int(end_w[0]*30)-1,(360-int(end_w[1]*30)-1)) # (x, y) in 360x360 map
+    print(start)
+    print(end)
     
-    #display.setColor(int(0xFF0000))
-   # display.drawPixel((360-int(end_w[1]*30)),int(end_w[0]*30))
-
-
+    display.setColor( int(0xFFFFFF))
+    display.drawPixel(int(end[1]),int(end[0]))
+    
+    display.setColor( int(0xFFFFFF))
+    display.drawPixel((360-int(start_w[1]*30)-1),int(start_w[0]*30)-1)
+    
+    class pathNode:
+        def __init__(self, parent = None, position = None):
+            self.parent = parent
+            self.position = position
+            #distance from start
+            self.d = 0
+            #remaining heuristic/ distance from end
+            self.h = 0
+            #total travel/ d + h
+            self.f = 0
+        #overide == operator to make comparisons easier    
+        def __eq__(self, other):
+            return self.position == other.position
+        
 # Part 2.3: Implement A* or Dijkstra's
     def path_planner(map, start, end):
         
@@ -112,8 +134,85 @@ if mode == 'planner':
         #:param end: A tuple of indices representing the end cell in the map
         #:return: A list of tuples as a path from the given start to the given end in the given maze
           
-        
+        startN = pathNode(None, start)
+        endN = pathNode(None, end)   
 
+        openL = []
+        closedL = []
+    
+        openL.append(startN)
+        #count = 0
+        #times = 0
+        while(len(openL) > 0):
+            cIndex = 0
+            cNode = openL[cIndex]
+        
+            for i in range(len(openL)):
+                if(openL[i].f < cNode.f):
+                    cIndex = i
+                    cNode = openL[i]
+                    
+            print(cNode.f)    
+            closedL.append(cNode)
+            openL.pop(cIndex)
+        
+            if(cNode == endN):
+                path = []
+                current = cNode
+                #times+=1
+                #print(times)
+                #when end node is found work back to the start node and save the path
+                while(current is not None):
+                    path.append(current.position)
+                    current = current.parent
+                #path is reversed since it works backwards so flip when returning    
+                return(np.flip(path))
+           
+        
+           
+            #get surrounding indeces from map
+            adjacent = [] 
+            
+            for i in [(-1,0),(1,0),(0,-1),(0,1),(-1,-1),(1,1),(-1,1),(1,-1)]:
+                
+                nPos = (cNode.position[0] + i[0], cNode.position[1] + i[1])
+                #make sure indeces are inside the bounds of 360
+                if(nPos[0] < 360 and nPos[0] >= 0 and nPos[1] < 360 and nPos[1] >= 0):
+                        #check if path is open
+                    if(map[nPos[0]][nPos[1]] == 0):
+                        
+                        childNode = pathNode(cNode, nPos)
+                        adjacent.append(childNode)
+                
+             
+            # check the possible next positions
+            for node in adjacent:
+                
+                #make sure the node hasnt been visited
+                for i in closedL:
+                    if node == i:
+                        continue
+                
+                #otherwise set the f value for the node/path 
+                
+                #Add root 2 to distance from source for diagonal children since moving diagonal is root 2 not 1
+                if(node.position[0] != node.parent.position[0] and node.position[1] != node.parent.position[1]):
+                    node.d = cNode.d + np.sqrt(2) 
+                else:
+                    node.d = cNode.d + 1
+                    
+                    
+                    
+                node.h = ((node.position[0] - endN.position[0])**2) + ((node.position[1] - endN.position[1]) ** 2)
+                node.f = node.d + node.h
+                
+                #double check that current node has lowest f value ensuring the minimum path is taken
+                for i in openL:
+                    if node == i and node.d > i.d:
+                        continue
+                        
+                openL.append(node)
+        return([])
 
 # Part 2.1: Load map (map.npy) from disk and visualize it
     map = np.load("map.npy")
@@ -133,10 +232,21 @@ if mode == 'planner':
     plt.show()
 
 # Part 2.3 continuation: Call path_planner
-
-
+    path = path_planner(cmap,start,end)
+    
 # Part 2.4: Turn paths into goal points and save on disk as path.npy and visualize it
-
+    
+    
+    for i in range(len(path)-1):
+        x = path[i][0]
+        y = path[i][1]
+        #print(x)
+        #print(y)
+        display.setColor( int(0xFF0000))
+        display.drawPixel(int(x),int(y))
+        
+        
+    np.save("path.npy",path)
 
 
 # Part 1.2: Map Initialization
@@ -149,7 +259,16 @@ if mode == 'manual':
 
 if mode == 'autonomous':
 # Part 3.1: Load path from disk and visualize it (Make sure its properly indented)
-    pass
+    path = np.load("path.npy")
+    
+    for i in range(len(path)-1):
+        x = path[i][0]
+        y = path[i][1]
+        #print(x)
+        #print(y)
+        display.setColor( int(0xFF0000))
+        display.drawPixel(int(x),int(y))
+        
 
 state = 0 # use this to iterate through your path
 
