@@ -142,8 +142,7 @@ if mode == 'planner':
         
 # Part 2.3: Implement A* or Dijkstra's
     def path_planner(map, start, end):
-    
-        
+      
         
         #:param map: A 2D numpy array of size 360x360 representing the world's cspace with 0 as free space and 1 as obstacle
         #:param start: A tuple of indices representing the start cell in the map
@@ -259,7 +258,7 @@ if mode == 'planner':
         #print(x)
         #print(y)
         
-        goalPoint = ((x + 1)/30,((-y + 359)/30))
+        goalPoint = ((y + 1)/30,((-x + 359)/30))
         
         goalPoints.append(goalPoint)
     
@@ -268,7 +267,7 @@ if mode == 'planner':
         
         
         
-    np.save("path.npy",path)
+    #np.save("path.npy",path)
     np.save("goalPath.npy",goalPoints)
 
 
@@ -285,7 +284,7 @@ if mode == 'autonomous':
     path = np.load("goalPath.npy")
     
     
-    for i in range(len(path)-1):
+    for i in range(len(path)):
         x = path[i][0]
         y = path[i][1]
         print(x)
