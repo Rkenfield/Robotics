@@ -1,4 +1,5 @@
 """lab5 controller."""
+# -*- coding: utf-8 -*-
 from controller import Robot, Motor, Camera, RangeFinder, Lidar, Keyboard
 import math
 import numpy as np
@@ -73,6 +74,14 @@ pose_theta = 0
 
 vL = 0
 vR = 0
+
+#variable initialization for controller
+Dist_Error = 0
+Bearing_Error = 0
+gain = .25
+xR = 0
+thetaR = 0
+final = 0
 
 ##################### IMPORTANT #####################
 # Set the mode here. Please change to 'autonomous' before submission
@@ -238,7 +247,7 @@ if mode == 'planner':
     #plt.imshow(nmap)
     #plt.show()
  
-# Part 2.2: Compute an approximation of the “configuration space”
+# Part 2.2: Compute an approximation of the "configuration space"
     
     filter = np.ones((7,7))
     cmap = convolve2d(nmap,filter)
@@ -261,6 +270,8 @@ if mode == 'planner':
         goalPoint = ((y + 1)/30,((-x + 359)/30))
         
         goalPoints.append(goalPoint)
+        
+        final = len(goalPoints)
     
         
         
@@ -289,8 +300,8 @@ if mode == 'autonomous':
         y = path[i][1]
         print(x)
         print(y)
-        #display.setColor( int(0xFF0000))
-        #display.drawPixel(int(x),int(y))
+        display.setColor( int(0xFF0000))
+        display.drawPixel(int(x),int(y))
         
 
 state = 0 # use this to iterate through your path
@@ -333,8 +344,8 @@ while robot.step(timestep) != -1 and mode != 'planner':
             # You will eventually REPLACE the following 2 lines with a more robust version of map
             # and gray drawing that has more levels than just 0 and 1.
             
-            # display.setColor(0xFFFFFF)
-            # display.drawPixel(360-int(wy*30),int(wx*30))
+            display.setColor(0xFFFFFF)
+            display.drawPixel(360-int(wy*30),int(wx*30))
             
             if(360-int(wy*30)-1 < 360 and int(wx*30)-1 < 360):
             
@@ -398,14 +409,58 @@ while robot.step(timestep) != -1 and mode != 'planner':
     else: # not manual mode
         pass
 # Part 3.2: Feedback controller
-        #STEP 1: Calculate the error
-
+    if(state < final):
+        #STEP 1: Calculate the error    
+    
+        Dist_Error = math.sqrt(((pose_x - goalPoints[state][0])**2) + ((pose_y - (goalPoints[state][1]))**2))
+   
+        Bearing_Error = math.atan2((goalPoints[state][1] - pose_y) , (goalPoints[state][0] - pose_x)) - pose_theta 
+    
 
         #STEP 2: Controller
-
+        xR = Dist_Error * gain 
+        thetaR = (Bearing_Error * gain) 
 
         #STEP 3: Compute wheelspeeds
-
+        if(Dist_Error > gain):
+    
+            if(Bearing_Error < -.1):
+                vL = 0
+            
+                if(thetaR * MAX_SPEED > MAX_SPEED):
+                    vR = MAX_SPEED
+                else:
+                    vR = abs(thetaR * MAX_SPEED)
+                
+                
+                  
+            elif(Bearing_Error > .1):
+                vR = 0
+        
+                if(thetaR * MAX_SPEED > MAX_SPEED):
+                    vL = MAX_SPEED
+                else:
+                    vL = abs(thetaR * MAX_SPEED)
+                
+            
+            
+            
+            else:    
+                if(xR*MAX_SPEED > MAX_SPEED):
+                    vL = MAX_SPEED
+                    vR = MAX_SPEED
+                else:
+                    vL = xR*MAX_SPEED
+                    vR = xR*MAX_SPEED
+        else:
+            vL = 0
+            vR = 0
+    
+            state+=1
+        
+    else:
+       vL = 0
+       vR = 0  
 
     # Normalize wheelspeed
     # Keep the max speed a bit less to minimize the jerk in motion
