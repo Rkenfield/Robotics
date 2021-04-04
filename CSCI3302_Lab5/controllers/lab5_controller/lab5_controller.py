@@ -64,13 +64,18 @@ keyboard.enable(timestep)
 display = robot.getDevice("display")
 
 # Odometry
-pose_x     = 2.58
-pose_y     = 8.9
+#pose_x     = 2.58
+#pose_y     = 8.9
+#pose_theta = 0
+
+pose_x     = 4.47
+pose_y     = 8.06
 pose_theta = 0
 
-#pose_x     = 4.46793
-#pose_y     = 8.05675
-#pose_theta = 0
+#pose_x = 4.266
+#pose_y = 8.033
+    
+    
 
 vL = 0
 vR = 0
@@ -86,8 +91,8 @@ final = 0
 ##################### IMPORTANT #####################
 # Set the mode here. Please change to 'autonomous' before submission
 # mode = 'manual' # Part 1.1: manual mode
-#mode = 'planner'
-mode = 'autonomous'
+mode = 'planner'
+#mode = 'autonomous'
 
 lidar_sensor_readings = []
 lidar_offsets = np.linspace(-LIDAR_ANGLE_RANGE/2., +LIDAR_ANGLE_RANGE/2., LIDAR_ANGLE_BINS)
@@ -117,15 +122,11 @@ if mode == 'planner':
     
     
     # Convert the start_w and end_W from webot's coordinate frame to map's
-    start = (int(start_w[0]*30)-1,(360-int(start_w[1]*30)-1)) # (x, y) in 360x360 map
-    end = (int(end_w[0]*30)-1,(360-int(end_w[1]*30)-1)) # (x, y) in 360x360 map
+    #start = (int(start_w[0]*30),(360-int(start_w[1]*30))) # (x, y) in 360x360 map
+    #end = (int(end_w[0]*30),(360-int(end_w[1]*30))) # (x, y) in 360x360 map
     
     #start =((360-int(start_w[1]*30)-1),int(start_w[0]*30)-1)
     #end = ((360-int(end_w[1]*30)-1),int(end_w[0]*30)-1)
-    print(start)
-    print(end)
-    
-    
     
     
     
@@ -151,13 +152,17 @@ if mode == 'planner':
         
 # Part 2.3: Implement A* or Dijkstra's
     def path_planner(map, start, end):
-      
-        
+    
+          
+        print(map[start[0],start[1]])    
         #:param map: A 2D numpy array of size 360x360 representing the world's cspace with 0 as free space and 1 as obstacle
         #:param start: A tuple of indices representing the start cell in the map
         #:param end: A tuple of indices representing the end cell in the map
         #:return: A list of tuples as a path from the given start to the given end in the given maze
-          
+        
+        #map[start[0],start[1]] = 0
+     
+         
         startN = pathNode(None, start)
         endN = pathNode(None, end)   
 
@@ -202,10 +207,13 @@ if mode == 'planner':
                 #make sure indeces are inside the bounds of 360
                 if(nPos[0] < 360 and nPos[0] >= 0 and nPos[1] < 360 and nPos[1] >= 0):
                         #check if path is open
-                    if(map[nPos[0]][nPos[1]] == 0):
-                        
+                    if(map[nPos[0]][nPos[1]] != 1):
                         adjacentNode = pathNode(cNode, nPos)
                         adjacent.append(adjacentNode)
+                    else:
+                        adjacentNode = pathNode(cNode, nPos)
+                        closedL.append(adjacentNode)
+                         
                 
              
             # check the possible next positions
@@ -226,7 +234,7 @@ if mode == 'planner':
                     
                     
                     
-                neighbor.h = ((neighbor.position[0] - endN.position[0])**2) + ((neighbor.position[1] - endN.position[1]) ** 2)
+                neighbor.h = ((endN.position[0] - neighbor.position[0])**2) + ((endN.position[1] - neighbor.position[1]) ** 2)
                 #neighbor.h = np.linalg.norm(np.array(neighbor.position) - np.array(endN.position))
                 neighbor.f = neighbor.d + neighbor.h
                 
@@ -236,28 +244,29 @@ if mode == 'planner':
                         continue
                         
                 openL.append(neighbor)
-        return([])
-
+                
+        return([])        
+         
 # Part 2.1: Load map (map.npy) from disk and visualize it
     map = np.load("map.npy")
     nmap = np.rot90(map,1,(1,0))
  
-    nmap[nmap>.5] = 1
-    nmap[nmap<=.5] = 0
+    map[map>.5] = 1
+    map[map<=.5] = 0
     #plt.imshow(nmap)
     #plt.show()
  
 # Part 2.2: Compute an approximation of the "configuration space"
     
     filter = np.ones((7,7))
-    cmap = convolve2d(nmap,filter)
+    cmap = convolve2d(map,filter)
     cmap[cmap>=1] = 1
     plt.imshow(cmap)
     plt.show()
 
 # Part 2.3 continuation: Call path_planner
     path = path_planner(cmap,start,end)
-    
+    print(len(path))
 # Part 2.4: Turn paths into goal points and save on disk as path.npy and visualize it
     
     goalPoints = []
@@ -278,7 +287,7 @@ if mode == 'planner':
         
         
         
-    #np.save("path.npy",path)
+    np.save("path.npy",path)
     np.save("goalPath.npy",goalPoints)
 
 
@@ -298,13 +307,13 @@ if mode == 'autonomous':
     for i in range(len(path)):
         x = path[i][0]
         y = path[i][1]
-        print(x)
-        print(y)
-        display.setColor( int(0xFF0000))
+        print((x,y))
+        
+        display.setColor(int(0xFF0000))
         display.drawPixel(int(x),int(y))
         
 
-state = 0 # use this to iterate through your path
+state = 1 # use this to iterate through your path
 
 while robot.step(timestep) != -1 and mode != 'planner':
 
@@ -409,40 +418,42 @@ while robot.step(timestep) != -1 and mode != 'planner':
     else: # not manual mode
         pass
 # Part 3.2: Feedback controller
-    if(state < final):
+    if(state < len(path)):
         #STEP 1: Calculate the error    
     
-        Dist_Error = math.sqrt(((pose_x - goalPoints[state][0])**2) + ((pose_y - (goalPoints[state][1]))**2))
+        Dist_Error = math.sqrt(((pose_x - path[state][0])**2) + ((pose_y - (path[state][1]))**2))
    
-        Bearing_Error = math.atan2((goalPoints[state][1] - pose_y) , (goalPoints[state][0] - pose_x)) - pose_theta 
+        Bearing_Error = math.atan2((path[state][1] - pose_y) , (path[state][0] - pose_x)) + pose_theta
     
 
         #STEP 2: Controller
-        xR = Dist_Error * gain 
-        thetaR = (Bearing_Error * gain) 
-
+        xR = Dist_Error 
+        thetaR = Bearing_Error 
+       
+        #print(Bearing_Error)
+        
         #STEP 3: Compute wheelspeeds
-        if(Dist_Error > gain):
+        if(Dist_Error > .3):
     
-            if(Bearing_Error < -.1):
-                vL = 0
+            if(Bearing_Error < -.2):
+                
             
-                if(thetaR * MAX_SPEED > MAX_SPEED):
+                if(abs(thetaR * MAX_SPEED * xR) > MAX_SPEED):
                     vR = MAX_SPEED
                 else:
-                    vR = abs(thetaR * MAX_SPEED)
-                
+                    vR = abs(thetaR * MAX_SPEED * xR)
+                vL = -vR
                 
                   
-            elif(Bearing_Error > .1):
-                vR = 0
+            elif(Bearing_Error > .2):
+                
         
-                if(thetaR * MAX_SPEED > MAX_SPEED):
+                if(abs(thetaR * MAX_SPEED * xR) > MAX_SPEED):
                     vL = MAX_SPEED
                 else:
-                    vL = abs(thetaR * MAX_SPEED)
+                    vL = abs(thetaR * MAX_SPEED * xR)
                 
-            
+                vR = -vL
             
             
             else:    
@@ -464,6 +475,13 @@ while robot.step(timestep) != -1 and mode != 'planner':
 
     # Normalize wheelspeed
     # Keep the max speed a bit less to minimize the jerk in motion
+    if(vL >= MAX_SPEED):
+        vL = MAX_SPEED
+        vR = vR
+    if(vR >= MAX_SPEED):
+        vR = MAX_SPEED
+        vL = vL
+    
 
 
     # Odometry code. Don't change speeds after this
