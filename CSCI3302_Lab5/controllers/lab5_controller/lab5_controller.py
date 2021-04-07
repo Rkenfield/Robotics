@@ -92,8 +92,8 @@ final = 0
 ##################### IMPORTANT #####################
 # Set the mode here. Please change to 'autonomous' before submission
 #mode = 'manual' # Part 1.1: manual mode
-#mode = 'planner'
-mode = 'autonomous'
+mode = 'planner'
+#mode = 'autonomous'
 
 lidar_sensor_readings = []
 lidar_offsets = np.linspace(-LIDAR_ANGLE_RANGE/2., +LIDAR_ANGLE_RANGE/2., LIDAR_ANGLE_BINS)
@@ -222,10 +222,10 @@ if mode == 'planner':
                 else:
                     neighbor.d = cNode.d + 1
         
-                # SHIV: The heuristic was not admissble unless you do the square root
+                
                 neighbor.h = math.sqrt(
                     ((endN.position[0] - neighbor.position[0]) ** 2) + ((endN.position[1] - neighbor.position[1]) ** 2))
-                # neighbor.h = np.linalg.norm(np.array(neighbor.position) - np.array(endN.position))
+                
                 neighbor.f = neighbor.d + neighbor.h
         
                 # double check that current node has lowest f value ensuring the minimum path is taken
@@ -254,12 +254,17 @@ if mode == 'planner':
     
  
 # Part 2.2: Compute an approximation of the "configuration space"
+   
+    
     
     filter = np.ones((16,16))
-    cmap = convolve2d(map,filter)
+    cmap = convolve2d(map,filter,mode = "same")
     cmap[cmap>=1] = 1
-    plt.imshow(cmap)
-    plt.show()
+     
+    
+    # plt.imshow(cmap)
+    
+    # plt.show()
 
 # Part 2.3 continuation: Call path_planner
     path = path_planner(cmap,start,end)
@@ -272,12 +277,12 @@ if mode == 'planner':
         y = float(path[i][1])
         #print(x)
         #print(y)
-        goalPoint = (x/30,y/30)
+        goalPoint = ((x/30),(y/30))
         goalPoints.append(goalPoint)
         final = len(goalPoints)
 
-    np.save("path.npy", path)
-    np.save("goalPath.npy",goalPoints)
+    np.save("path.npy", goalPoints)
+    #np.save("goalPath.npy",goalPoints)
 
 
 # Part 1.2: Map Initialization
@@ -290,10 +295,34 @@ if mode == 'manual':
 
 if mode == 'autonomous':
 # Part 3.1: Load path from disk and visualize it (Make sure its properly indented)
-    path = np.load("goalPath.npy")
+    #path = np.load("goalPath.npy")
+
+    path = np.load("path.npy")
+    
+    
+    map = np.load("map.npy")
+    
+ 
+    map[map>.7] = 1
+    map[map<=.7] = 0
+    
+ 
+# Part 2.2: Compute an approximation of the "configuration space"
+    
+    # filter = np.ones((16,16))
+    # cmap = convolve2d(map,filter,mode = "same")
+    # cmap[cmap>=1] = 1
+    # #plt.scatter(path[:,1],path[:,0])   
+    # plt.imshow(cmap)
+    # plt.show()
+    
+   
+    #plt.show()
+    
     
     for i in range(len(path)):
-        display.setColor(int(0xFF0000))
+    
+        display.setColor(int(0xFFFFFF))
         display.drawPixel(360-int(path[i][1]*30),int(path[i][0]*30))
  
     state = 0 # use this to iterate through your path
