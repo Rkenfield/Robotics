@@ -92,8 +92,8 @@ final = 0
 ##################### IMPORTANT #####################
 # Set the mode here. Please change to 'autonomous' before submission
 #mode = 'manual' # Part 1.1: manual mode
-mode = 'planner'
-#mode = 'autonomous'
+#mode = 'planner'
+mode = 'autonomous'
 
 lidar_sensor_readings = []
 lidar_offsets = np.linspace(-LIDAR_ANGLE_RANGE/2., +LIDAR_ANGLE_RANGE/2., LIDAR_ANGLE_BINS)
@@ -125,18 +125,10 @@ if mode == 'planner':
     # Convert the start_w and end_W from webot's coordinate frame to map's
     start = (int(start_w[0]*30)-1,(int(start_w[1]*30)-1)) # (x, y) in 360x360 map
     end = (int(end_w[0]*30)-1,(int(end_w[1]*30)-1)) # (x, y) in 360x360 map
-    
-    #start =((360-int(start_w[1]*30)-1),int(start_w[0]*30)-1)
-    #end = ((360-int(end_w[1]*30)-1),int(end_w[0]*30)-1)
-    #print(start)
-    #print(end)
+   
     
     
-    #display.setColor( int(0xFFFFFF))
-    #display.drawPixel(int(end[1]),int(end[0]))
-    
-    #display.setColor( int(0xFFFFFF))
-    #display.drawPixel((360-int(start_w[1]*30)-1),int(start_w[0]*30)-1)
+  
     
     class pathNode:
         def __init__(self, parent = None, position = None):
@@ -160,10 +152,10 @@ if mode == 'planner':
         #:param end: A tuple of indices representing the end cell in the map
         #:return: A list of tuples as a path from the given start to the given end in the given maze
         if map[start[0]][start[1]] == 1 or map[end[0]][end[1]] == 1:
-            #print("Start or Goal on obstacle")
+            
             return []
         
-        # map[start[0],start[1]] = 0
+       
         startN = pathNode(None, start)
         endN = pathNode(None, end)
         
@@ -174,7 +166,7 @@ if mode == 'planner':
         # count = 0
         # times = 0
         while (len(openL) > 0):
-            #print(len(openL))
+            
             cIndex = 0
             cNode = openL[cIndex]
         
@@ -183,13 +175,13 @@ if mode == 'planner':
                     cIndex = i
                     cNode = openL[i]
         
-            # print(cNode.f)
+            
             closedL.append(cNode)
-            #print(openL[cIndex].position)
+           
             openL.pop(cIndex)
         
             if cNode == endN:
-                #print("Goal found")
+                
                 path = []
                 current = cNode
         
@@ -218,7 +210,7 @@ if mode == 'planner':
             for neighbor in adjacent:
         
                 # make sure the node hasnt been visited
-                if neighbor in closedL:  # SHIV : This is O(n) vs your O(n^2) implementation
+                if neighbor in closedL: 
                     continue
                 
         
@@ -242,7 +234,7 @@ if mode == 'planner':
                         if neighbor.d > i.d:
                              break
                         else:
-                            # SHIV: TODO: Update the d score of the node in open list along with it's f score and parent
+                            
                             i.d = neighbor.d
                             i.f = i.d + i.h
                             i.parent = neighbor.parent
@@ -271,7 +263,7 @@ if mode == 'planner':
 
 # Part 2.3 continuation: Call path_planner
     path = path_planner(cmap,start,end)
-    #print(len(path))
+   
 # Part 2.4: Turn paths into goal points and save on disk as path.npy and visualize it
     
     goalPoints = []
@@ -423,7 +415,7 @@ while robot.step(timestep) != -1 and mode != 'planner':
             xR = Dist_Error 
             thetaR = Bearing_Error 
            
-            #print(Bearing_Error)
+            
             
             #STEP 3: Compute wheelspeeds
             if(Dist_Error > gain):
