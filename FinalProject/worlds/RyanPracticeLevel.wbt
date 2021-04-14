@@ -1,0 +1,68 @@
+#VRML_SIM R2021a utf8
+WorldInfo {
+  info [
+    "The model of the E-puck robot"
+  ]
+  title "E-puck simulation"
+  coordinateSystem "NUE"
+}
+Viewpoint {
+  orientation -0.09539449915312272 0.8733914201494899 0.4775848790954146 2.6531336067570033
+  position 1.0908653291307913 2.89020140443539 -1.1362018491001504
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 2 2
+  floorTileSize 1 1
+}
+WoodenBox {
+  translation 0.19443 0.05 -0.284344
+  rotation 0 1 0 0.5
+  size 0.1 0.1 0.1
+}
+WoodenBox {
+  translation -1.10543 0.05 -1.3942
+  rotation 0 1 0 4.96782
+  name "wooden box(1)"
+  size 0.1 0.1 0.1
+}
+WoodenBox {
+  translation 0.145387 0.05 -0.533133
+  rotation 0 1 0 5.36782
+  name "wooden box(2)"
+  size 0.1 0.1 0.1
+}
+WoodenBox {
+  translation -0.3 0.05 -0.36
+  rotation 0 1 0 5.36782
+  name "wooden box(3)"
+  size 0.1 0.1 0.1
+}
+WoodenBox {
+  translation -0.65 0.05 0.66
+  rotation 0 1 0 5.36782
+  name "wooden box(4)"
+  size 0.1 0.1 0.1
+}
+DEF EPUCK E-puck {
+  translation 0 -6.34971e-05 0
+  rotation 0.00030106179978150354 0.9999999321174318 -0.00021243098814004984 0
+  name "e-puck(1)"
+  controller "HiderController"
+  turretSlot [
+    Display {
+      width 360
+      height 360
+    }
+    Lab4RobotisLds01 {
+      enablePhysics FALSE
+    }
+  ]
+  groundSensorsSlot [
+    E-puckGroundSensors {
+    }
+  ]
+}
