@@ -7,8 +7,8 @@ WorldInfo {
   coordinateSystem "NUE"
 }
 Viewpoint {
-  orientation -0.09539449915312272 0.8733914201494899 0.4775848790954146 2.6531336067570033
-  position 1.0908653291307913 2.89020140443539 -1.1362018491001504
+  orientation -0.005715682929070082 0.8659086741500795 0.5001694702801297 2.986901764076604
+  position 0.9159512313905998 4.209086092768228 -2.2630387514245682
 }
 TexturedBackground {
 }
@@ -19,27 +19,21 @@ RectangleArena {
   floorTileSize 1 1
 }
 WoodenBox {
-  translation 0.19443 0.05 -0.284344
-  rotation 0 1 0 0.5
-  size 0.1 0.1 0.1
+  translation 0.334388 0.05 -0.28104
+  rotation 0 1 0 -0.023595307179586023
+  size 1.5 0.1 0.1
 }
 WoodenBox {
-  translation -1.10543 0.05 -1.3942
-  rotation 0 1 0 4.96782
-  name "wooden box(1)"
-  size 0.1 0.1 0.1
-}
-WoodenBox {
-  translation 0.145387 0.05 -0.533133
-  rotation 0 1 0 5.36782
+  translation -0.479315 0.05 -0.614781
+  rotation 0 1 0 -3.0097553071795864
   name "wooden box(2)"
-  size 0.1 0.1 0.1
+  size 2 0.1 0.1
 }
 WoodenBox {
-  translation -0.3 0.05 -0.36
-  rotation 0 1 0 5.36782
+  translation -0.704328 0.05 -0.049155
+  rotation 0 -1 0 1.43896
   name "wooden box(3)"
-  size 0.1 0.1 0.1
+  size 1 0.1 0.1
 }
 WoodenBox {
   translation -0.65 0.05 0.66
