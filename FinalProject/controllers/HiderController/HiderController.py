@@ -178,18 +178,23 @@ for i in range (21):
        lOffsets.append((count + i) * lAngle)
         
 obs_dist = .1
-
+tick = 0
 map = np.zeros((360,360))
 count = 0
+goalPoints = [(.57,.7),(-.38,.8),(.66,.33),(.74,-.53)]
+sCount = 0
 # Main loop:
 # - perform simulation steps until Webots is stopping the controller
 while robot.step(SIM_TIMESTEP) != -1:
     # Read the sensors:
     lidar_sensor_readings = lidar.getRangeImage()
-   
-    # Process sensor data here.
-    if(state == "basic_mode"):
     
+    display.setColor(0XFF0000)
+    display.drawPixel(int((pose_x + 1)*180),int((pose_y + 1)*180))
+    # Process sensor data here.
+    
+    if(state == "basic_mode"):
+        
         for i, rho in enumerate(lidar_sensor_readings):
             alpha = -lOffsets[i]
 
@@ -229,8 +234,7 @@ while robot.step(SIM_TIMESTEP) != -1:
                         
                         display.drawPixel(int((wx + 1)*180),int((wy + 1)*180))
     
-        display.setColor(0XFF0000)
-        display.drawPixel(int((pose_x + 1)*180),int((pose_y + 1)*180))
+        
                         
                         
         #display.drawPixel(int(pose_x*30), 360-int(pose_y*30))
@@ -242,9 +246,9 @@ while robot.step(SIM_TIMESTEP) != -1:
         
     
         if(lidar_sensor_readings[10] <= .3):
-            print("Left Sensor: ", lidar_sensor_readings[0])
-            print("Right Sensor: ", lidar_sensor_readings[20])
-            print(count)
+            # print("Left Sensor: ", lidar_sensor_readings[0])
+            # print("Right Sensor: ", lidar_sensor_readings[20])
+            
         
             if(lidar_sensor_readings[0] > lidar_sensor_readings[20] and lidar_sensor_readings[0] - lidar_sensor_readings[20] >= .05 and count == 0):
                 vL = (-MAX_SPEED/4)
@@ -282,38 +286,121 @@ while robot.step(SIM_TIMESTEP) != -1:
                 #print("left")
             else:
                 vL = MAX_SPEED/2
-                vR = MAX_SPEED/2        
+                vR = MAX_SPEED/2    
+         
+        leftMotor.setVelocity(vL)
+        rightMotor.setVelocity(vR)    
+        
+        
+        
             
     elif(state == "Path_finder"):
         
-        start_w = (pose_x,pose_y)
-        end_w = (.57,.7)
+        if(sCount < len(goalPoints)):  
+            
+            if(sCount == 0):
+                map[map>.1] = 1
+                map[map<=.1] = 0
         
-        start = (int((start_w[0] + 1)*180) -1,int((start_w[1] + 1)*180) -1)
-        end = (int((end_w[0] + 1)*180) - 1,int((end_w[1] + 1)*180) - 1)
+                filter = np.ones((10,10))
+                cmap = convolve2d(map,filter,mode = "same")
+                cmap[cmap>=1] = 1
+                
+                
+            start_w = (pose_x,pose_y)
+            end_w = goalPoints[sCount]  
+            
+            start = (int((start_w[0] + 1)*180) -1,int((start_w[1] + 1)*180) -1)
+            end = (int((end_w[0] + 1)*180) - 1,int((end_w[1] + 1)*180) - 1)
         
-        map[map>.1] = 1
-        map[map<=.1] = 0
-    
-        filter = np.ones((10,10))
-        cmap = convolve2d(map,filter,mode = "same")
-        cmap[cmap>=1] = 1
         
-        path = path_planner(cmap, start, end)
+            path = path_planner(cmap, start, end)
+        
+            PathPoints = []
+            for i in range(len(path)):
+                x = float(path[i][0])
+                y = float(path[i][1])
+                #print(x)
+                #print(y)
+                PathPoint = (((x+1)/180)-1,((y+1)/180)-1)
+                PathPoints.append(PathPoint)
+                #final = len(PathPoints)
+            
+            sCount = sCount + 1
+            pc = 0
+            state = "Path_follower"
+        
+        
+        else:
+            state = "none"   
+            
+            
+    elif(state == "Path_follower"):
+        
+        if(pc < len(pathPoints)):
+        
+            Dist_Error = math.sqrt(((pose_x - PathPoints[pc][0])**2) + ((pose_y - (PathPoints[pc][1]))**2))
+       
+            Bearing_Error = math.atan2((PathPoints[pc][1] - pose_y) , (PathPoints[pc][0] - pose_x)) + pose_theta
+        
     
-        goalPoints = []
-        for i in range(len(path)):
-            x = float(path[i][0])
-            y = float(path[i][1])
-            #print(x)
-            #print(y)
-            goalPoint = (((x+1)/180)-1,((y+1)/180)-1)
-            goalPoints.append(goalPoint)
-            final = len(goalPoints)
-    
-    leftMotor.setVelocity(vL)
-    rightMotor.setVelocity(vR)
-    
+            #STEP 2: Controller
+            xR = Dist_Error 
+            thetaR = Bearing_Error 
+           
+            
+            
+            #STEP 3: Compute wheelspeeds
+            if(Dist_Error > gain):
+        
+                if(Bearing_Error < -gain):
+                    
+                
+                    if(abs(thetaR * MAX_SPEED * xR) > MAX_SPEED):
+                        vR = MAX_SPEED
+                    else:
+                        vR = abs(thetaR * MAX_SPEED * xR)
+                    vL = -vR
+                      
+                elif(Bearing_Error > gain):
+                    
+            
+                    if(abs(thetaR * MAX_SPEED * xR) > MAX_SPEED):
+                        vL = MAX_SPEED
+                    else:
+                        vL = abs(thetaR * MAX_SPEED * xR)
+                    
+                    vR = -vL
+                
+                
+                else:    
+                    if(xR*MAX_SPEED > MAX_SPEED):
+                        vL = MAX_SPEED
+                        vR = MAX_SPEED
+                    else:
+                        vL = xR*MAX_SPEED
+                        vR = xR*MAX_SPEED
+            else:
+                vL = 0
+                vR = 0
+                pc = pc + 1
+        
+               
+                
+        else:
+           vL = 0
+           vR = 0 
+           state = "Path_finder" 
+        
+        
+        leftMotor.setVelocity(vL)
+        rightMotor.setVelocity(vR)                 
+   
+    else:
+        vL = 0
+        vR = 0
+        leftMotor.setVelocity(vL)
+        rightMotor.setVelocity(vR)   
     
     
     
