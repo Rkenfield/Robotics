@@ -7,42 +7,43 @@ WorldInfo {
   coordinateSystem "NUE"
 }
 Viewpoint {
-  orientation -0.017248829376875958 0.897952369014108 0.43975450067859256 3.071179606000829
-  position 0.25092461318727854 3.7172919414268297 -2.5127936994195634
+  orientation 0.4715399812571041 0.7601260407038906 0.4470553078981135 4.493215648050271
+  position -1.7319395764097714 5.757249597463951 1.0230116844409611
 }
 TexturedBackground {
 }
 TexturedBackgroundLight {
 }
 RectangleArena {
+  translation 1 0 1
   floorSize 2 2
   floorTileSize 1 1
 }
 WoodenBox {
-  translation 0.334388 0.05 -0.28104
+  translation 0.534605 0.05 1.26209
   rotation 0 1 0 -0.023595307179586023
   size 1.5 0.1 0.1
 }
 WoodenBox {
-  translation -0.479315 0.05 -0.614781
+  translation 2.03444 0.05 1.54115
   rotation 0 1 0 -3.0097553071795864
   name "wooden box(2)"
   size 2 0.1 0.1
 }
 WoodenBox {
-  translation -0.704328 0.05 -0.049155
+  translation 1.65836 0.05 0.702204
   rotation 0 -1 0 1.43896
   name "wooden box(3)"
   size 1 0.1 0.1
 }
 WoodenBox {
-  translation -0.65 0.05 0.66
+  translation 0.143945 0.05 0.314508
   rotation 0 1 0 5.36782
   name "wooden box(4)"
   size 0.1 0.1 0.1
 }
 DEF EPUCK E-puck {
-  translation 0 -6.34971e-05 0
+  translation 1 -6.34971e-05 1
   rotation 0.00030106179978150354 0.9999999321174318 -0.00021243098814004984 0
   name "e-puck(1)"
   controller "HiderController"
@@ -56,6 +57,10 @@ DEF EPUCK E-puck {
     }
   ]
   groundSensorsSlot [
+    Compass {
+    }
+    GPS {
+    }
     E-puckGroundSensors {
     }
   ]
