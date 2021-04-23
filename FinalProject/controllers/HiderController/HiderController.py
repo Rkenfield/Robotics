@@ -21,7 +21,7 @@ pose_y = 1
 pose_theta = 0
 
 
-state = "basic_mode"
+state = "caught"
 
 
 # ePuck Constants
@@ -390,7 +390,7 @@ while robot.step(SIM_TIMESTEP) != -1:
             
             
     elif(state == "Path_follower"):
-<<<<<<< Updated upstream
+
         for i in PathPoints:
             # display.setColor(0X45b6fe)
             # display.drawPixel(i[0],i[1])
@@ -400,7 +400,7 @@ while robot.step(SIM_TIMESTEP) != -1:
         # #plt.show()
         
         gain = .02
-=======
+
         if(f == 0):
             for i in PathPoints:
                 display.setColor(0X45b6fe)
@@ -414,22 +414,22 @@ while robot.step(SIM_TIMESTEP) != -1:
             
             gain = .1
             f = f+1 
->>>>>>> Stashed changes
+
         
         if(pc < len(PathPoints)):
         
             Dist_Error = math.sqrt(((pose_x - PathPoints[pc][0])**2) + ((pose_y - (PathPoints[pc][1]))**2))
        
-<<<<<<< Updated upstream
+
             Bearing_Error = math.atan2((PathPoints[pc][1] - pose_y) , (PathPoints[pc][0] - pose_x)) + pose_theta
         
-=======
+
             Bearing_Error = math.atan2((PathPoints[pc][0] - pose_y) , (PathPoints[pc][1] - pose_x)) + pose_theta
             
             print("Dist Error: ", Dist_Error)
             
             print("Bearing_Error: ", Bearing_Error)
->>>>>>> Stashed changes
+
     
             #STEP 2: Controller
             xR = Dist_Error 
@@ -440,7 +440,7 @@ while robot.step(SIM_TIMESTEP) != -1:
             #STEP 3: Compute wheelspeeds
             if(Dist_Error > gain):
         
-<<<<<<< Updated upstream
+
                 if(Bearing_Error < -gain):
                     
                 
@@ -457,7 +457,7 @@ while robot.step(SIM_TIMESTEP) != -1:
                         vL = MAX_SPEED/4
                     else:
                         vL = abs(thetaR * MAX_SPEED * xR)/4
-=======
+
                 if(Bearing_Error < -.3):
                     
                 
@@ -474,26 +474,26 @@ while robot.step(SIM_TIMESTEP) != -1:
                         vL = MAX_SPEED
                     else:
                         vL = abs(thetaR * MAX_SPEED * xR)
->>>>>>> Stashed changes
+
                     
                     vR = -vL
                 
                 
                 else:    
                     if(xR*MAX_SPEED > MAX_SPEED):
-<<<<<<< Updated upstream
+
                         vL = MAX_SPEED/2
                         vR = MAX_SPEED/2
                     else:
                         vL = xR*MAX_SPEED/2
                         vR = xR*MAX_SPEED/2
-=======
+
                         vL = MAX_SPEED
                         vR = MAX_SPEED
-                    else:
-                        vL = xR*MAX_SPEED
-                        vR = xR*MAX_SPEED
->>>>>>> Stashed changes
+                    # else:
+                        # vL = xR*MAX_SPEED
+                        # vR = xR*MAX_SPEED
+
             else:
                 vL = 0
                 vR = 0
@@ -509,16 +509,9 @@ while robot.step(SIM_TIMESTEP) != -1:
         
         leftMotor.setVelocity(vL)
         rightMotor.setVelocity(vR)                 
-   
-<<<<<<< Updated upstream
-    else:
-        vL = 0
-        vR = 0
-        leftMotor.setVelocity(vL)
-        rightMotor.setVelocity(vR)   
     
     
-=======
+
     elif(state == "caught"):
         if(caughtTimer == 0):
             x = random.randint(0,1)
@@ -542,7 +535,7 @@ while robot.step(SIM_TIMESTEP) != -1:
             caughtPose = (pose_x,pose_y)
             caughtTimer = 0
             state = "flee"       
->>>>>>> Stashed changes
+
     
     elif(state == "flee"):
         if(math.sqrt(((pose_x - caughtPose[0])**2) + ((pose_y - (caughtPose[1]))**2)) < 1):
@@ -604,11 +597,7 @@ while robot.step(SIM_TIMESTEP) != -1:
     
     
     
-<<<<<<< Updated upstream
-    #odometer = [pose_x, pose_y, pose_theta]
-    #print(odometer)
+
+
 
 # Enter here exit cleanup code.
-=======
-   
->>>>>>> Stashed changes
