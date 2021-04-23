@@ -309,7 +309,7 @@ while robot.step(SIM_TIMESTEP) != -1:
         
             
     elif(state == "Path_finder"):
-        
+        print("path finder")
         if(sCount < len(goalPoints)):  
             print(sCount)
             if(sCount == 0):
@@ -361,79 +361,84 @@ while robot.step(SIM_TIMESTEP) != -1:
             
     elif(state == "Path_follower"):
         for i in PathPoints:
-            # display.setColor(0X45b6fe)
-            # display.drawPixel(i[0],i[1])
+            display.setColor(0X45b6fe)
+            display.drawPixel(int((i[0]+1)*180),int((i[1]+1)*180))
             print(i)
         # #plt.scatter(path[:,1],path[:,0])   
             
         # #plt.show()
         
-        gain = .02
+        print("Path Follower")
         
-        if(pc < len(PathPoints)):
+        # gain = .05
         
-            Dist_Error = math.sqrt(((pose_x - PathPoints[pc][0])**2) + ((pose_y - (PathPoints[pc][1]))**2))
+        # if(pc < len(PathPoints)):
+        
+            # Dist_Error = math.sqrt(((pose_x - PathPoints[pc][0])**2) + ((pose_y - (PathPoints[pc][1]))**2))
        
-            Bearing_Error = math.atan2((PathPoints[pc][1] - pose_y) , (PathPoints[pc][0] - pose_x)) + pose_theta
-        
+            # Bearing_Error = math.atan2((PathPoints[pc][1] - pose_y) , (PathPoints[pc][0] - pose_x)) + pose_theta
+            
+            # print("Dist Error: ", Dist_Error)
+            
+            # print("Bearing_Error: ", Bearing_Error)
     
-            #STEP 2: Controller
-            xR = Dist_Error 
-            thetaR = Bearing_Error 
+            # #STEP 2: Controller
+            # xR = Dist_Error 
+            # thetaR = Bearing_Error 
            
             
             
-            #STEP 3: Compute wheelspeeds
-            if(Dist_Error > gain):
+            # #STEP 3: Compute wheelspeeds
+            # if(Dist_Error > gain):
         
-                if(Bearing_Error < -gain):
+                # if(Bearing_Error < -gain):
                     
                 
-                    if(abs(thetaR * MAX_SPEED * xR) > MAX_SPEED):
-                        vR = MAX_SPEED/4
-                    else:
-                        vR = abs(thetaR * MAX_SPEED * xR)/4
-                    vL = -vR
+                    # if(abs(thetaR * MAX_SPEED * xR) > MAX_SPEED):
+                        # vR = MAX_SPEED/2
+                    # else:
+                        # vR = abs(thetaR * MAX_SPEED * xR)/2
+                    # vL = -vR
                       
-                elif(Bearing_Error > gain):
+                # elif(Bearing_Error > gain):
                     
             
-                    if(abs(thetaR * MAX_SPEED * xR) > MAX_SPEED):
-                        vL = MAX_SPEED/4
-                    else:
-                        vL = abs(thetaR * MAX_SPEED * xR)/4
+                    # if(abs(thetaR * MAX_SPEED * xR) > MAX_SPEED):
+                        # vL = MAX_SPEED/2
+                    # else:
+                        # vL = abs(thetaR * MAX_SPEED * xR)/2
                     
-                    vR = -vL
+                    # vR = -vL
                 
                 
-                else:    
-                    if(xR*MAX_SPEED > MAX_SPEED):
-                        vL = MAX_SPEED/2
-                        vR = MAX_SPEED/2
-                    else:
-                        vL = xR*MAX_SPEED/2
-                        vR = xR*MAX_SPEED/2
-            else:
-                vL = 0
-                vR = 0
-                pc = pc + 1
+                # else:    
+                    # if(xR*MAX_SPEED > MAX_SPEED):
+                        # vL = MAX_SPEED/2
+                        # vR = MAX_SPEED/2
+                    # else:
+                        # vL = xR*MAX_SPEED/2
+                        # vR = xR*MAX_SPEED/2
+            # else:
+                # vL = 0
+                # vR = 0
+                # pc = pc + 1
         
                
                 
-        else:
-           vL = 0
-           vR = 0 
-           state = "Path_finder" 
+        # else:
+           # vL = 0
+           # vR = 0 
+           # state = "Path_finder" 
         
         
-        leftMotor.setVelocity(vL)
-        rightMotor.setVelocity(vR)                 
+        # leftMotor.setVelocity(vL)
+        # rightMotor.setVelocity(vR)                 
    
-    else:
-        vL = 0
-        vR = 0
-        leftMotor.setVelocity(vL)
-        rightMotor.setVelocity(vR)   
+    # else:
+        # vL = 0
+        # vR = 0
+        # leftMotor.setVelocity(vL)
+        # rightMotor.setVelocity(vR)   
     
     
     
@@ -450,7 +455,7 @@ while robot.step(SIM_TIMESTEP) != -1:
     pose_x += ds*math.sin(pose_theta)
     pose_theta += (dsr-dsl)/EPUCK_AXLE_DIAMETER
     
-    #odometer = [pose_x, pose_y, pose_theta]
-    #print(odometer)
+    # odometer = [pose_x, pose_y, pose_theta]
+    # print(odometer)
 
 # Enter here exit cleanup code.
