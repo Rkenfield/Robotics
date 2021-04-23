@@ -8,6 +8,7 @@ import random
 import copy
 import numpy as np
 from matplotlib import pyplot as plt
+from scipy.signal import convolve2d 
 from controller import Robot, Motor, DistanceSensor
 
 LIDAR_SENSOR_MAX_RANGE = 5.5 # Meters
@@ -53,6 +54,8 @@ lidar.enable(SIM_TIMESTEP)
 lidar.enablePointCloud()
 
 
+
+
 #set up lidar
 lidar_sensor_readings = lidar.getRangeImage()
 lOffsets = []
@@ -75,7 +78,8 @@ class pathNode:
         return self.position == other.position
 
 def path_planner(map, start, end):
-   
+    
+    
     if map[start[0]][start[1]] == 1 or map[end[0]][end[1]] == 1:
         
         return []
@@ -90,7 +94,7 @@ def path_planner(map, start, end):
     openL.append(startN)
     
     while (len(openL) > 0):
-        
+        #print("in loop")
         cIndex = 0
         cNode = openL[cIndex]
     
@@ -181,8 +185,10 @@ obs_dist = .1
 tick = 0
 map = np.zeros((360,360))
 count = 0
-goalPoints = [(.57,.7),(-.38,.8),(.66,.33),(.74,-.53)]
+#goalPoints = [(.57,.7),(-.38,.8),(.66,.33),(.74,-.53)]
+goalPoints = [(.5,.8)]
 sCount = 0
+timer = 0
 # Main loop:
 # - perform simulation steps until Webots is stopping the controller
 while robot.step(SIM_TIMESTEP) != -1:
@@ -194,110 +200,118 @@ while robot.step(SIM_TIMESTEP) != -1:
     # Process sensor data here.
     
     if(state == "basic_mode"):
-        
-        for i, rho in enumerate(lidar_sensor_readings):
-            alpha = -lOffsets[i]
-
-            if rho > LIDAR_SENSOR_MAX_RANGE:
-                rho = LIDAR_SENSOR_MAX_RANGE
-
-          
+    
+        if(timer < 10000):  
+              
+            for i, rho in enumerate(lidar_sensor_readings):
+                alpha = -lOffsets[i]
+    
+                if rho > LIDAR_SENSOR_MAX_RANGE:
+                    rho = LIDAR_SENSOR_MAX_RANGE
+    
+              
+                            
+                xr = math.sin(alpha)* rho
+                yr = math.cos(alpha)* rho
                         
-            xr = math.sin(alpha)* rho
-            yr = math.cos(alpha)* rho
+                wx = (xr*math.cos(pose_theta)) + (yr*math.sin(pose_theta)) + pose_x
+                wy = (yr*math.cos(pose_theta)) - (xr*math.sin(pose_theta)) + pose_y
+                   
+                
+                if rho < 0.5*LIDAR_SENSOR_MAX_RANGE:
+        
+                    #display.setColor(0X0000FF)
+                    #display.drawPixel(360-int(wy*30),int(wx*30))
+                    #display.drawPixel(int((wx + 1)*180),int((wy + 1)*180))
                     
-            wx = (xr*math.cos(pose_theta)) + (yr*math.sin(pose_theta)) + pose_x
-            wy = (yr*math.cos(pose_theta)) - (xr*math.sin(pose_theta)) + pose_y
-               
+                    if(int((wx + 1)*180) - 1 < 360 and int((wy + 1)*180) -1 < 360):
+                    
+                        if( map[int((wx + 1)*180) - 1 ][int((wy + 1)*180) - 1] < 1):
+                            
+                            map[int((wx + 1)*180) - 1 ][int((wy + 1)*180) - 1] = (map[int((wx + 1)*180) - 1 ][int((wy + 1)*180) - 1] + .01)
+                            #print( map[int((wx + 1)*180) - 1 ][int((wy + 1)*180) - 1])    
+                        
+                        else:
+                            map[int((wx + 1)*180) - 1 ][int((wy + 1)*180) - 1] = 1
+                            
+                        if(map[int((wx + 1)*180) - 1 ][int((wy + 1)*180) - 1] > .1):
+                           
+                            map[int((wx + 1)*180) - 1 ][int((wy + 1)*180) - 1] = 1
+                        
+                            display.setColor( int((((map[int((wx + 1)*180) - 1 ][int((wy + 1)*180) - 1]*256)**2) + (map[int((wx + 1)*180) - 1 ][int((wy + 1)*180) - 1]*256) + map[int((wx + 1)*180) - 1 ][int((wy + 1)*180) - 1])*255))
+                            
+                            display.drawPixel(int((wx + 1)*180),int((wy + 1)*180))
+        
             
-            if rho < 0.5*LIDAR_SENSOR_MAX_RANGE:
-    
-                #display.setColor(0X0000FF)
-                #display.drawPixel(360-int(wy*30),int(wx*30))
-                #display.drawPixel(int((wx + 1)*180),int((wy + 1)*180))
-                
-                if(int((wx + 1)*180) - 1 < 360 and int((wy + 1)*180) -1 < 360):
-                
-                    if( map[int((wx + 1)*180) - 1 ][int((wy + 1)*180) - 1] < 1):
-                        
-                        map[int((wx + 1)*180) - 1 ][int((wy + 1)*180) - 1] = (map[int((wx + 1)*180) - 1 ][int((wy + 1)*180) - 1] + .01)
-                        #print( map[int((wx + 1)*180) - 1 ][int((wy + 1)*180) - 1])    
-                    
-                    else:
-                        map[int((wx + 1)*180) - 1 ][int((wy + 1)*180) - 1] = 1
-                        
-                    if(map[int((wx + 1)*180) - 1 ][int((wy + 1)*180) - 1] > .1):
-                       
-                        map[int(wx*30)-1][int(wy*30)-1] = 1
-                    
-                        display.setColor( int((((map[int((wx + 1)*180) - 1 ][int((wy + 1)*180) - 1]*256)**2) + (map[int((wx + 1)*180) - 1 ][int((wy + 1)*180) - 1]*256) + map[int((wx + 1)*180) - 1 ][int((wy + 1)*180) - 1])*255))
-                        
-                        display.drawPixel(int((wx + 1)*180),int((wy + 1)*180))
-    
-        
-                        
-                        
-        #display.drawPixel(int(pose_x*30), 360-int(pose_y*30))
-        
-        
-       
-        # Enter here functions to send actuator commands, like:
-        # motor.setPosition(10.0)
-        
-    
-        if(lidar_sensor_readings[10] <= .3):
-            # print("Left Sensor: ", lidar_sensor_readings[0])
-            # print("Right Sensor: ", lidar_sensor_readings[20])
+                            
+                            
+            #display.drawPixel(int(pose_x*30), 360-int(pose_y*30))
+            
+            
+           
+            # Enter here functions to send actuator commands, like:
+            # motor.setPosition(10.0)
             
         
-            if(lidar_sensor_readings[0] > lidar_sensor_readings[20] and lidar_sensor_readings[0] - lidar_sensor_readings[20] >= .05 and count == 0):
-                vL = (-MAX_SPEED/4)
-                vR = (MAX_SPEED/4)
-                print("left")
-            elif(lidar_sensor_readings[0] < lidar_sensor_readings[20] and lidar_sensor_readings[20] - lidar_sensor_readings[0] >= .05 and count == 0):
-                vL = (MAX_SPEED/4)
-                vR = (-MAX_SPEED/4)
-                print("right") 
-            else:
-                if(count == 0):
-                    x = random.randint(0,1)
+            if(lidar_sensor_readings[10] <= .3):
+                # print("Left Sensor: ", lidar_sensor_readings[0])
+                # print("Right Sensor: ", lidar_sensor_readings[20])
                 
-                if(x % 2 == 0):
-                    vL = (MAX_SPEED/4)
-                    vR = (-MAX_SPEED/4)
-                    print("right") 
-                else:
+            
+                if(lidar_sensor_readings[0] > lidar_sensor_readings[20] and lidar_sensor_readings[0] - lidar_sensor_readings[20] >= .05 and count == 0):
                     vL = (-MAX_SPEED/4)
                     vR = (MAX_SPEED/4)
-                    print("left")
-                
-                count = count + 1
+                    #print("left")
+                elif(lidar_sensor_readings[0] < lidar_sensor_readings[20] and lidar_sensor_readings[20] - lidar_sensor_readings[0] >= .05 and count == 0):
+                    vL = (MAX_SPEED/4)
+                    vR = (-MAX_SPEED/4)
+                    #print("right") 
+                else:
+                    if(count == 0):
+                        x = random.randint(0,1)
                     
-                if(count >= 100):
-                    count = 0
-        else:
-            if(lidar_sensor_readings[0] <= obs_dist):
-                vL = (MAX_SPEED/4)
-                vR = (-MAX_SPEED/4)
-                #print("right") 
-            elif(lidar_sensor_readings[20] <= obs_dist ):
-                vL = (-MAX_SPEED/4)
-                vR = (MAX_SPEED/4)
-                #print("left")
+                    if(x % 2 == 0):
+                        vL = (MAX_SPEED/4)
+                        vR = (-MAX_SPEED/4)
+                        #print("right") 
+                    else:
+                        vL = (-MAX_SPEED/4)
+                        vR = (MAX_SPEED/4)
+                        #print("left")
+                    
+                    count = count + 1
+                        
+                    if(count >= 100):
+                        count = 0
             else:
-                vL = MAX_SPEED/2
-                vR = MAX_SPEED/2    
-         
-        leftMotor.setVelocity(vL)
-        rightMotor.setVelocity(vR)    
+            
+                if(lidar_sensor_readings[0] <= obs_dist):
+                    vL = (MAX_SPEED/4)
+                    vR = (-MAX_SPEED/4)
+                    #print("right") 
+                elif(lidar_sensor_readings[20] <= obs_dist ):
+                    vL = (-MAX_SPEED/4)
+                    vR = (MAX_SPEED/4)
+                    #print("left")
+                else:
+                    vL = MAX_SPEED/2
+                    vR = MAX_SPEED/2    
         
+            leftMotor.setVelocity(vL)
+            rightMotor.setVelocity(vR)    
+            timer += 1
+            #print(timer)
+            
+        else:
+            state = "Path_finder"
+            timer = 0 
         
         
             
     elif(state == "Path_finder"):
         
         if(sCount < len(goalPoints)):  
-            
+            print(sCount)
             if(sCount == 0):
                 map[map>.1] = 1
                 map[map<=.1] = 0
@@ -306,6 +320,9 @@ while robot.step(SIM_TIMESTEP) != -1:
                 cmap = convolve2d(map,filter,mode = "same")
                 cmap[cmap>=1] = 1
                 
+                plt.imshow(cmap)
+                
+                
                 
             start_w = (pose_x,pose_y)
             end_w = goalPoints[sCount]  
@@ -313,7 +330,12 @@ while robot.step(SIM_TIMESTEP) != -1:
             start = (int((start_w[0] + 1)*180) -1,int((start_w[1] + 1)*180) -1)
             end = (int((end_w[0] + 1)*180) - 1,int((end_w[1] + 1)*180) - 1)
         
-        
+            print("Start_w: ", start_w)
+            print("End_w: ", end_w)
+            
+            print("start: ", start)
+            print("end: ", end)    
+                
             path = path_planner(cmap, start, end)
         
             PathPoints = []
@@ -328,6 +350,8 @@ while robot.step(SIM_TIMESTEP) != -1:
             
             sCount = sCount + 1
             pc = 0
+            
+            
             state = "Path_follower"
         
         
@@ -336,8 +360,17 @@ while robot.step(SIM_TIMESTEP) != -1:
             
             
     elif(state == "Path_follower"):
+        for i in PathPoints:
+            # display.setColor(0X45b6fe)
+            # display.drawPixel(i[0],i[1])
+            print(i)
+        # #plt.scatter(path[:,1],path[:,0])   
+            
+        # #plt.show()
         
-        if(pc < len(pathPoints)):
+        gain = .02
+        
+        if(pc < len(PathPoints)):
         
             Dist_Error = math.sqrt(((pose_x - PathPoints[pc][0])**2) + ((pose_y - (PathPoints[pc][1]))**2))
        
@@ -357,29 +390,29 @@ while robot.step(SIM_TIMESTEP) != -1:
                     
                 
                     if(abs(thetaR * MAX_SPEED * xR) > MAX_SPEED):
-                        vR = MAX_SPEED
+                        vR = MAX_SPEED/4
                     else:
-                        vR = abs(thetaR * MAX_SPEED * xR)
+                        vR = abs(thetaR * MAX_SPEED * xR)/4
                     vL = -vR
                       
                 elif(Bearing_Error > gain):
                     
             
                     if(abs(thetaR * MAX_SPEED * xR) > MAX_SPEED):
-                        vL = MAX_SPEED
+                        vL = MAX_SPEED/4
                     else:
-                        vL = abs(thetaR * MAX_SPEED * xR)
+                        vL = abs(thetaR * MAX_SPEED * xR)/4
                     
                     vR = -vL
                 
                 
                 else:    
                     if(xR*MAX_SPEED > MAX_SPEED):
-                        vL = MAX_SPEED
-                        vR = MAX_SPEED
+                        vL = MAX_SPEED/2
+                        vR = MAX_SPEED/2
                     else:
-                        vL = xR*MAX_SPEED
-                        vR = xR*MAX_SPEED
+                        vL = xR*MAX_SPEED/2
+                        vR = xR*MAX_SPEED/2
             else:
                 vL = 0
                 vR = 0
@@ -416,5 +449,8 @@ while robot.step(SIM_TIMESTEP) != -1:
     pose_y += ds*math.cos(pose_theta)
     pose_x += ds*math.sin(pose_theta)
     pose_theta += (dsr-dsl)/EPUCK_AXLE_DIAMETER
+    
+    #odometer = [pose_x, pose_y, pose_theta]
+    #print(odometer)
 
 # Enter here exit cleanup code.
