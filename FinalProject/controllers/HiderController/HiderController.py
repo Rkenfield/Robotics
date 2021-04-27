@@ -18,11 +18,11 @@ LIDAR_ANGLE_RANGE = 1.5708 # 90 degrees, 1.5708 radians
 # These are your pose values that you will update by solving the odometry equations
 pose_x = 1
 pose_y = 1
-pose_theta = 0
+pose_theta = -1.5
 
-
-state = "caught"
-
+#Controls the state machine for the epuck
+state = "Explore"
+#state = "Path_finder"
 
 # ePuck Constants
 EPUCK_AXLE_DIAMETER = 0.053 # ePuck's wheels are 53mm apart.
@@ -207,7 +207,7 @@ while robot.step(SIM_TIMESTEP) != -1:
     lidar_sensor_readings = lidar.getRangeImage()
     
     display.setColor(0XFF0000)
-    display.drawPixel(int(pose_y*180),360-int(pose_x*180))
+    display.drawPixel(360-int(pose_x*180),360-int(pose_y*180))
     
     pose_y = gps.getValues()[2]
     pose_x = gps.getValues()[0]
@@ -220,83 +220,89 @@ while robot.step(SIM_TIMESTEP) != -1:
     # print("Pose X: ", pose_x)
     # print("Pose Y: ",pose_y)
     
-    if(state == "basic_mode"):
-    
+    #mapping mode for the epuck 
+    if(state == "Explore"):
+        #Timer for how long the explore function of the robot works for
         if(timer < 15000):  
-              
+            #Reads through the lidar readings  
             for i, rho in enumerate(lidar_sensor_readings):
-                alpha = -lOffsets[i]
+                alpha = lOffsets[i]
     
                 if rho > LIDAR_SENSOR_MAX_RANGE:
                     rho = LIDAR_SENSOR_MAX_RANGE
     
-              
-                            
+                worldtheta = pose_theta + 1.57
+                #Get the world position for the end of the lidar beam             
                 xr = math.cos(alpha)* rho
-                yr = -math.sin(alpha)* rho
-                
+                yr = math.sin(alpha)* rho
                         
-                wx =  math.cos(pose_theta)*xr - math.sin(pose_theta)*yr + pose_x
-                wy =  -(math.sin(pose_theta)*xr + math.cos(pose_theta)*yr) + pose_y
+                wx = abs((xr*math.cos(worldtheta)) + (yr*math.sin(worldtheta)) + pose_x)
+                wy = abs((yr*math.cos(worldtheta)) - (xr*math.sin(worldtheta)) + pose_y)
+        
+                if(wx > 2):
+                    wx = 2
+                if(wy > 2):
+                    wy = 2        
+               
+                if(i == 10):
                 
-                # xr = math.sin(alpha)* rho
-                # yr = math.cos(alpha)* rho        
-                    
-                # wx = (xr*math.cos(pose_theta)) + (yr*math.sin(pose_theta)) + pose_x
-                # wy = (yr*math.cos(pose_theta)) - (xr*math.sin(pose_theta)) + pose_y
+                    print("X: ",360-int(wx*180))
+                    print("y: ",360-int(wy*180) )
+                
+                
     
-
-                print("WX: ", wx)
-                print("WY: ", wy)
                 
-                if rho < 0.5*LIDAR_SENSOR_MAX_RANGE:
+                
+                
+                #Tracks when obstacles get within a certain range to the epuck
+                if rho < 0.15*LIDAR_SENSOR_MAX_RANGE:
         
                     #display.setColor(0X0000FF)
                     #display.drawPixel(360-int(wy*30),int(wx*30))
                     #display.drawPixel(int((wx + 1)*180),int((wy + 1)*180))
                     
-                    if(abs(int((wx + 1)*180) - 1) < 360 and abs(int((wy + 1)*180) -1) < 360):
-                    
-                        if( map[int(wx*180) - 1 ][(int(wy*180)) - 1] < 1):
+                    #ensures the measurement of the lidar is within the bounds of the map
+                    if(abs(int(wx*180) ) < 360 and abs(int(wy*180) ) < 360):
+                        #if the spot in the map is not already at max increment the value
+                        if( map[int(wx*180) ][(int(wy*180)) ] < 1):
                             
-                            map[int(wx*180) - 1 ][(int(wy*180)) - 1] = map[int(wx*180) - 1 ][(int(wy*180)) - 1] + .01
+                            map[int(wx*180) ][(int(wy*180)) ] = map[int(wx*180) ][(int(wy*180)) ] + .01
                             #print( map[int((wx + 1)*180) - 1 ][int((wy + 1)*180) - 1])    
-                        
+                     
+                        #if the value at the index is greater than the max make sure to cap the max value
                         else:
-                            map[int(wx*180) - 1 ][(int(wy*180)) - 1] = 1
-                            
-                        if(map[int(wx*180) - 1 ][(int(wy*180)) - 1] > .1):
+                            map[int(wx*180) ][(int(wy*180))] = 1
+                        #if the value at the index in the map is incremented to a certain point than set it to max confirming it is an obstacle
+                        if(map[int(wx*180)  ][(int(wy*180))] > .5):
                            
-                            map[int(wx*180) - 1 ][(int(wy*180)) - 1] = 1
+                            map[int(wx*180)][(int(wy*180))] = 1
                         
-                        display.setColor( int((((map[int(wx*180) - 1 ][(int(wy*180)) - 1]*256)**2) + (map[int(wx*180) - 1 ][(int(wy*180)) - 1]*256) + map[int(wx*180) - 1 ][(int(wy*180)) - 1])*255))
+                        #Draw the Obstacles in the display
+                        display.setColor( int((((map[int(wx*180) ][(int(wy*180)) ]*256)**2) + (map[int(wx*180) ][(int(wy*180))]*256) + map[int(wx*180) ][(int(wy*180)) ])*255))
                         
-                        display.drawPixel(int(wy*180),360-int(wx*180))
-              
+                        display.drawPixel(360-int(wx*180),360-int(wy*180))
+                        
+                       
                             
-                            
-            #display.drawPixel(int(pose_x*30), 360-int(pose_y*30))
+       
             
-            
-           
-            # Enter here functions to send actuator commands, like:
-            # motor.setPosition(10.0)
-            
-        
+            #This handles the basic driving around the map:
+            #When the front sensor is within a certain distance the epuck needs to turn
             if(lidar_sensor_readings[10] <= .3):
-                # print("Left Sensor: ", lidar_sensor_readings[0])
-                # print("Right Sensor: ", lidar_sensor_readings[20])
                 
-            
+                #If the left side has more room than the right and and the difference between the two are greater than a certain gain then turn left
                 if(lidar_sensor_readings[0] > lidar_sensor_readings[20] and lidar_sensor_readings[0] - lidar_sensor_readings[20] >= .05 and count == 0):
                     vL = (-MAX_SPEED/4)
                     vR = (MAX_SPEED/4)
                     #print("left")
+                # if the right side has more room and the difference between the two are greater than a certain gain then turn right
                 elif(lidar_sensor_readings[0] < lidar_sensor_readings[20] and lidar_sensor_readings[20] - lidar_sensor_readings[0] >= .05 and count == 0):
                     vL = (MAX_SPEED/4)
                     vR = (-MAX_SPEED/4)
                     #print("right") 
+                #if the sensors are equal or not greater than the gain then choose one side randomly and turn that direction
                 else:
+                    # The count makes sure that it doesnt choose a random direction back and forth but chooses one and then continues to turn that direction
                     if(count == 0):
                         x = random.randint(0,1)
                     
@@ -310,29 +316,37 @@ while robot.step(SIM_TIMESTEP) != -1:
                         #print("left")
                     
                     count = count + 1
-                        
+                    #After turning a certain amount reset    
                     if(count >= 100):
                         count = 0
+            #If the forward sensor isnt facing the wall but one of the side sensors are too close to the wall the epuck needs to adjust
             else:
-            
+               
+                #If the left sensor is too close to an obstacle turn right
                 if(lidar_sensor_readings[0] <= obs_dist):
                     vL = (MAX_SPEED/4)
                     vR = (-MAX_SPEED/4)
                     #print("right") 
+                #If the right sensor is too close to an obstacle turn left
                 elif(lidar_sensor_readings[20] <= obs_dist ):
                     vL = (-MAX_SPEED/4)
                     vR = (MAX_SPEED/4)
                     #print("left")
+                #Otherwise just drive straight
                 else:
                     vL = MAX_SPEED/2
                     vR = MAX_SPEED/2    
         
             leftMotor.setVelocity(vL)
             rightMotor.setVelocity(vR)    
-            timer += 1
-            #print(timer)
             
+            #Increment timer for how long the epuck should be in mapping/ exploring mode
+            timer += 1
+            
+            #print(timer)
+        #When the time runs out for the epuck discovery mode then the epuck switches to using the map it has created to drive through the level rather than obstacle sensors  
         else:
+        
             state = "Path_finder"
             timer = 0 
         
@@ -341,8 +355,10 @@ while robot.step(SIM_TIMESTEP) != -1:
     elif(state == "Path_finder"):
         
         if(sCount < len(goalPoints)):  
+        
             #print(sCount)
             if(sCount == 0):
+            
                 map[map>.1] = 1
                 map[map<=.1] = 0
         
@@ -357,8 +373,8 @@ while robot.step(SIM_TIMESTEP) != -1:
             start_w = (pose_x,pose_y)
             end_w = goalPoints[sCount]  
             
-            start = ((int(start_w[0]*180)-1) ,(int((start_w[1]*180) -1)))
-            end = (int(end_w[0]*180) - 1, int(end_w[1]*180) - 1)
+            start = ((int(start_w[0]*180)) ,(int((start_w[1]*180))))
+            end = (int(end_w[0]*180), int(end_w[1]*180) )
         
             print("Start_w: ", start_w)
             print("End_w: ", end_w)
@@ -369,23 +385,25 @@ while robot.step(SIM_TIMESTEP) != -1:
             path = path_planner(cmap, start, end)
         
             PathPoints = []
+            
             for i in range(len(path)):
                 x = float(path[i][0])
                 y = float(path[i][1])
                 #print(x)
                 #print(y)
-                PathPoint = (((x+1)/180),((y+1)/180))
+                PathPoint = (((x)/180),((y)/180))
                 PathPoints.append(PathPoint)
                 #final = len(PathPoints)
             
             sCount = sCount + 1
-            pc = 0
             
+            pc = 0
             
             state = "Path_follower"
         
         
         else:
+        
             state = "none"   
             
             
@@ -403,8 +421,8 @@ while robot.step(SIM_TIMESTEP) != -1:
 
         if(f == 0):
             for i in PathPoints:
-                display.setColor(0X45b6fe)
-                display.drawPixel(int((i[1]*180)-1),int(360 - (i[0]*180)-1))
+                display.setColor(0XFFFFFF)
+                display.drawPixel(int((i[0]*180)-1),int(360 - (i[1]*180)-1))
                 #print(i)
             # #plt.scatter(path[:,1],path[:,0])   
                 
@@ -513,6 +531,7 @@ while robot.step(SIM_TIMESTEP) != -1:
     
 
     elif(state == "caught"):
+    
         if(caughtTimer == 0):
             x = random.randint(0,1)
             led.set(1)
