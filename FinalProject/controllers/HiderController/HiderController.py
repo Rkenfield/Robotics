@@ -15,14 +15,24 @@ LIDAR_SENSOR_MAX_RANGE = 5.5 # Meters
 LIDAR_ANGLE_BINS = 21 # 21 Bins to cover the angular range of the lidar, centered at 10
 LIDAR_ANGLE_RANGE = 1.5708 # 90 degrees, 1.5708 radians
 
-# These are your pose values that you will update by solving the odometry equations
+#Robot starts in the middle of a 2 by 2 map
 pose_x = 1
 pose_y = 1
-pose_theta = -1.5
+pose_theta = 0
 
 #Controls the state machine for the epuck
 state = "Explore"
+
+#code should automatically switch between states
 #state = "Path_finder"
+#state = "Path_follower"
+
+#needs to be set by the supervisor 
+#state = "caught"
+#set from the caught state
+#state = "flee"
+
+
 
 # ePuck Constants
 EPUCK_AXLE_DIAMETER = 0.053 # ePuck's wheels are 53mm apart.
@@ -62,7 +72,15 @@ lOffsets = []
 lAngle = LIDAR_ANGLE_RANGE / LIDAR_ANGLE_BINS
 count = -10
 
+#set up offsets for lidar
+for i in range (21):
+    if i == 10:
+       lOffsets.append(0)
+    else:
+       lOffsets.append((count + i) * lAngle)
+        
 
+#set up the gps
 gps = robot.getDevice("gps")
 gps.enable(SIM_TIMESTEP)
 compass = robot.getDevice("compass")
@@ -182,39 +200,42 @@ def path_planner(map, start, end):
 
 
 
-
-for i in range (21):
-    if i == 10:
-       lOffsets.append(0)
-    else:
-       lOffsets.append((count + i) * lAngle)
-        
+#variables for looping through different behaviors 
 obs_dist = .1
 tick = 0
+#set map of 360 by 360 to all 0's
 map = np.zeros((360,360))
 count = 0
-#goalPoints = [(.57,.7),(-.38,.8),(.66,.33),(.74,-.53)]
-goalPoints = [(.38,1.65)]
+
+goalPoints = [(.38,1.65),(1,1)]
 sCount = 0
 timer = 0
 f = 0
-
+a = 0
+ncount = 0
 caughtTimer = 0
 # Main loop:
 # - perform simulation steps until Webots is stopping the controller
 while robot.step(SIM_TIMESTEP) != -1:
     # Read the sensors:
     lidar_sensor_readings = lidar.getRangeImage()
-    
+    #draws where epuck is in the display
     display.setColor(0XFF0000)
     display.drawPixel(360-int(pose_x*180),360-int(pose_y*180))
     
+    #use gps to track position of epuck
     pose_y = gps.getValues()[2]
     pose_x = gps.getValues()[0]
     n = compass.getValues()
-    rad = -((math.atan2(n[0], n[2]))-1.5708)
-    pose_theta = rad
-
+    #This one is for the bearing error
+    rad = math.atan2(n[0], n[2])
+    #this one is for the display and mapping
+    rads = -((math.atan2(n[0], n[2]))-1.5708)
+    #for beaeing error
+    pose_theta = -rad - 1.5708
+    
+    #for drawing on display and mapping
+    worldtheta = rads + 1.5708
     # Process sensor data here.
     
     # print("Pose X: ", pose_x)
@@ -223,7 +244,7 @@ while robot.step(SIM_TIMESTEP) != -1:
     #mapping mode for the epuck 
     if(state == "Explore"):
         #Timer for how long the explore function of the robot works for
-        if(timer < 15000):  
+        if(timer < 20000):  
             #Reads through the lidar readings  
             for i, rho in enumerate(lidar_sensor_readings):
                 alpha = lOffsets[i]
@@ -231,7 +252,7 @@ while robot.step(SIM_TIMESTEP) != -1:
                 if rho > LIDAR_SENSOR_MAX_RANGE:
                     rho = LIDAR_SENSOR_MAX_RANGE
     
-                worldtheta = pose_theta + 1.57
+                
                 #Get the world position for the end of the lidar beam             
                 xr = math.cos(alpha)* rho
                 yr = math.sin(alpha)* rho
@@ -244,10 +265,10 @@ while robot.step(SIM_TIMESTEP) != -1:
                 if(wy > 2):
                     wy = 2        
                
-                if(i == 10):
+                # if(i == 10):
                 
-                    print("X: ",360-int(wx*180))
-                    print("y: ",360-int(wy*180) )
+                    # print("X: ",360-int(wx*180))
+                    # print("y: ",360-int(wy*180) )
                 
                 
     
@@ -273,7 +294,7 @@ while robot.step(SIM_TIMESTEP) != -1:
                         else:
                             map[int(wx*180) ][(int(wy*180))] = 1
                         #if the value at the index in the map is incremented to a certain point than set it to max confirming it is an obstacle
-                        if(map[int(wx*180)  ][(int(wy*180))] > .5):
+                        if(map[int(wx*180)  ][(int(wy*180))] > .2):
                            
                             map[int(wx*180)][(int(wy*180))] = 1
                         
@@ -351,16 +372,19 @@ while robot.step(SIM_TIMESTEP) != -1:
             timer = 0 
         
         
-            
+    #When the explorer state has mapped out a bit of the map it switches to using said map to find paths to points        
     elif(state == "Path_finder"):
         
+        #Makes sure each goal point has a path after one is reached
         if(sCount < len(goalPoints)):  
         
             #print(sCount)
+            #if its the first time into the path finder
             if(sCount == 0):
-            
-                map[map>.1] = 1
-                map[map<=.1] = 0
+                
+                #sets up the convolved map gotten from explorer state
+                map[map>.2] = 1
+                map[map<=.2] = 0
         
                 filter = np.ones((10,10))
                 cmap = convolve2d(map,filter,mode = "same")
@@ -369,23 +393,26 @@ while robot.step(SIM_TIMESTEP) != -1:
                 plt.imshow(cmap)
                 plt.show()
                 
-                
+            #gets the start and end in the world for the robot and goal point    
             start_w = (pose_x,pose_y)
             end_w = goalPoints[sCount]  
             
+            #changes those robot and end points coordinates into map based coordinates
             start = ((int(start_w[0]*180)) ,(int((start_w[1]*180))))
             end = (int(end_w[0]*180), int(end_w[1]*180) )
         
-            print("Start_w: ", start_w)
-            print("End_w: ", end_w)
+            # print("Start_w: ", start_w)
+            # print("End_w: ", end_w)
             
-            print("start: ", start)
-            print("end: ", end)    
-                
+            # print("start: ", start)
+            # print("end: ", end)    
+             
+            #calls the path planner to get the path from the robots current position to the target point using A*    
             path = path_planner(cmap, start, end)
         
             PathPoints = []
             
+            #takes the path created and changes the points in the path from map based coordinates into world based coordinates
             for i in range(len(path)):
                 x = float(path[i][0])
                 y = float(path[i][1])
@@ -395,34 +422,27 @@ while robot.step(SIM_TIMESTEP) != -1:
                 PathPoints.append(PathPoint)
                 #final = len(PathPoints)
             
+            #increments the number of paths
             sCount = sCount + 1
-            
+            #sets up a counter variable for the number of points in the path reached
             pc = 0
             
+            #with the gotten path enter the next state being the follower
             state = "Path_follower"
         
         
         else:
-        
+            #if all the points have been reached then exit the state machine epuck has finished task
             state = "none"   
             
             
     elif(state == "Path_follower"):
-
-        for i in PathPoints:
-            # display.setColor(0X45b6fe)
-            # display.drawPixel(i[0],i[1])
-            print(i)
-        # #plt.scatter(path[:,1],path[:,0])   
-            
-        # #plt.show()
         
-        gain = .02
-
+        #if it is the first time entering the follower for the current path
         if(f == 0):
             for i in PathPoints:
                 display.setColor(0XFFFFFF)
-                display.drawPixel(int((i[0]*180)-1),int(360 - (i[1]*180)-1))
+                display.drawPixel(360-int((i[0]*180)),int(360 - (i[1]*180)))
                 #print(i)
             # #plt.scatter(path[:,1],path[:,0])   
                 
@@ -430,95 +450,103 @@ while robot.step(SIM_TIMESTEP) != -1:
             
             #print("Path Follower")
             
-            gain = .1
+            gain = .04
             f = f+1 
 
         
         if(pc < len(PathPoints)):
         
+           
+            #get the distance from the robot to the next point
             Dist_Error = math.sqrt(((pose_x - PathPoints[pc][0])**2) + ((pose_y - (PathPoints[pc][1]))**2))
        
-
-            Bearing_Error = math.atan2((PathPoints[pc][1] - pose_y) , (PathPoints[pc][0] - pose_x)) + pose_theta
+            #get the difference between the robots angle and the position of the next point
+            Bearing_Error = math.atan2((PathPoints[pc][1] - pose_y) , (PathPoints[pc][0] - pose_x)) - worldtheta
         
 
-            Bearing_Error = math.atan2((PathPoints[pc][0] - pose_y) , (PathPoints[pc][1] - pose_x)) + pose_theta
-            
+           
             print("Dist Error: ", Dist_Error)
             
             print("Bearing_Error: ", Bearing_Error)
 
-    
-            #STEP 2: Controller
-            xR = Dist_Error 
-            thetaR = Bearing_Error 
+ 
+            xR = Dist_Error
+            thetaR = Bearing_Error
            
             
-            
-            #STEP 3: Compute wheelspeeds
+            #if the robot is a certain distance from the next point
             if(Dist_Error > gain):
-        
-
-                if(Bearing_Error < -gain):
+                #print(a)
+                #this handles if the robot is bouncing back and forth between two bearing errors then it will rotate a direction for a small amount of time
+                if(a < 5000):
+                    #if the robot is too far rotated in the negative direction turn left
+                    if(Bearing_Error <-.2):
+                           
                     
+                        if(abs(thetaR * MAX_SPEED * xR) > MAX_SPEED):
+                            vR = MAX_SPEED/4
+                        else:
+                            vR = abs(thetaR * MAX_SPEED * xR)/4
+                        vL = -vR
+                        a = a + 1 
+                    #if the robot is to far turned in the positive direction then turn right         
+                    elif(Bearing_Error >.2):
+                        
                 
-                    if(abs(thetaR * MAX_SPEED * xR) > MAX_SPEED):
-                        vR = MAX_SPEED/4
-                    else:
-                        vR = abs(thetaR * MAX_SPEED * xR)/4
-                    vL = -vR
-                      
-                elif(Bearing_Error > gain):
-                    
-            
-                    if(abs(thetaR * MAX_SPEED * xR) > MAX_SPEED):
-                        vL = MAX_SPEED/4
-                    else:
-                        vL = abs(thetaR * MAX_SPEED * xR)/4
-
-                if(Bearing_Error < -.3):
-                    
+                        if(abs(thetaR * MAX_SPEED * xR) > MAX_SPEED):
+                            vL = MAX_SPEED/4
+                        else:
+                            vL = abs(thetaR * MAX_SPEED * xR)/4
+    
+                        
+                        vR = -vL
                 
-                    if(abs(thetaR * MAX_SPEED * xR) > MAX_SPEED):
-                        vR = MAX_SPEED
-                    else:
-                        vR = abs(thetaR * MAX_SPEED * xR)
-                    vL = -vR
-                      
-                elif(Bearing_Error > .3):
+                        a = a + 1
+                    #if the bearing error is in an acceptable range drive straight
+                    else:    
+                        #reset the count to make sure the robot doesn't get stuck jittering
+                        a = 0
+                        if(xR*MAX_SPEED > MAX_SPEED):
+    
+                            vL = MAX_SPEED/2
+                            vR = MAX_SPEED/2
+                        else:
+                            #makes sure the robot drives slower the closer it gets to the next point
+                            vL = xR*MAX_SPEED/2
+                            vR = xR*MAX_SPEED/2
+                #if the robot has been stuck for a certain length of time then choose a random direction and turn that set direction
+                else:
+                    #gets a random direction to turn and then turn said direction
+                    if(ncount == 0):
+                        x = random.randint(0,1)
                     
-            
-                    if(abs(thetaR * MAX_SPEED * xR) > MAX_SPEED):
-                        vL = MAX_SPEED
+                    if(x % 2 == 0):
+                        vL = (MAX_SPEED/4)
+                        vR = (-MAX_SPEED/4)
+                        #print("right") 
                     else:
-                        vL = abs(thetaR * MAX_SPEED * xR)
-
+                        vL = (-MAX_SPEED/4)
+                        vR = (MAX_SPEED/4)
+                        #print("left")
                     
-                    vR = -vL
-                
-                
-                else:    
-                    if(xR*MAX_SPEED > MAX_SPEED):
+                    ncount = ncount + 1
+                        
+                    if(ncount >= 50):
+                        ncount = 0
+                        a = 0
+                        
 
-                        vL = MAX_SPEED/2
-                        vR = MAX_SPEED/2
-                    else:
-                        vL = xR*MAX_SPEED/2
-                        vR = xR*MAX_SPEED/2
-
-                        vL = MAX_SPEED
-                        vR = MAX_SPEED
-                    # else:
-                        # vL = xR*MAX_SPEED
-                        # vR = xR*MAX_SPEED
-
+            #if the robot has reached the desired point then set speed to 0 and get the next point skipping a few points to speed up driving
             else:
                 vL = 0
                 vR = 0
-                pc = pc + 1
+                pc = pc + 3
+                #print(pc)
         
                
-                
+            leftMotor.setVelocity(vL)
+            rightMotor.setVelocity(vR)   
+        #if the final point has been reached then we can switch back to the path finder to get the next goal point's path        
         else:
            vL = 0
            vR = 0 
@@ -529,16 +557,18 @@ while robot.step(SIM_TIMESTEP) != -1:
         rightMotor.setVelocity(vR)                 
     
     
-
+    #the supervisor is supposed to trigger this state telling the Epuck when it has been caught
     elif(state == "caught"):
-    
+        #In caught state the epucks lights will turn on and it will spin in place for a certain amount of time
         if(caughtTimer == 0):
+            #gets a random direction for the Epuck to turn
             x = random.randint(0,1)
+            #turns on the lights for the epuck
             led.set(1)
             caughtTimer = caughtTimer + 1
         
         if(caughtTimer < 500):
-           
+            #turns said random direction   
             if(x % 2 == 0):
                 vL = (MAX_SPEED/2)
                 vR = (-MAX_SPEED/2)
@@ -549,28 +579,36 @@ while robot.step(SIM_TIMESTEP) != -1:
             leftMotor.setVelocity(vL)
             rightMotor.setVelocity(vR)   
             caughtTimer = caughtTimer + 1
+        
         else:
+            #after the set amount of time it turns off the light and enters the flee state
             led.set(0)
+            #saves the area it was caught for the flee state to use
             caughtPose = (pose_x,pose_y)
             caughtTimer = 0
             state = "flee"       
 
     
     elif(state == "flee"):
+        #gets the distance between the Epuck and where it was caught
         if(math.sqrt(((pose_x - caughtPose[0])**2) + ((pose_y - (caughtPose[1]))**2)) < 1):
+            #similar to the Explorer state the Epuck drives using its sensors to avoid obstacles until it is a certain distance from where it was caught
+            #checks if obstacle is directly in front of robot
             if(lidar_sensor_readings[10] <= .3):
                 # print("Left Sensor: ", lidar_sensor_readings[0])
                 # print("Right Sensor: ", lidar_sensor_readings[20])
                 
-            
+                #turns left depending on how far obstacle is from left sensor
                 if(lidar_sensor_readings[0] > lidar_sensor_readings[20] and lidar_sensor_readings[0] - lidar_sensor_readings[20] >= .05 and count == 0):
                     vL = (-MAX_SPEED/4)
                     vR = (MAX_SPEED/4)
                     #print("left")
+                #turns right depending on how far obstacle is from right sensor
                 elif(lidar_sensor_readings[0] < lidar_sensor_readings[20] and lidar_sensor_readings[20] - lidar_sensor_readings[0] >= .05 and count == 0):
                     vL = (MAX_SPEED/4)
                     vR = (-MAX_SPEED/4)
                     #print("right") 
+                #if neither left or right is acceptable or both are acceptable then just turn a random direction for a certain amount
                 else:
                     if(count == 0):
                         x = random.randint(0,1)
@@ -588,16 +626,19 @@ while robot.step(SIM_TIMESTEP) != -1:
                         
                     if(count >= 100):
                         count = 0
+            #if an obstacle is too far from the front sensor but close enough to the left and right then the epuck turns the needed direction
             else:
-            
+                #turns right if left sensor is too close to the wall
                 if(lidar_sensor_readings[0] <= obs_dist):
                     vL = (MAX_SPEED/4)
                     vR = (-MAX_SPEED/4)
                     #print("right") 
+                #turns left if the right sensor is too close to the wall
                 elif(lidar_sensor_readings[20] <= obs_dist ):
                     vL = (-MAX_SPEED/4)
                     vR = (MAX_SPEED/4)
                     #print("left")
+                #drives straight otherwise
                 else:
                     vL = MAX_SPEED/2
                     vR = MAX_SPEED/2    
@@ -606,8 +647,9 @@ while robot.step(SIM_TIMESTEP) != -1:
             rightMotor.setVelocity(vR)   
         
         else:
+            #after done fleeing then re enter the path finder state to find a path from the epucks current position to the next goal point
             state = "Path_finder"
-                  
+    #when the epuck has completed all goals then the system is done              
     else:
         vL = 0
         vR = 0
