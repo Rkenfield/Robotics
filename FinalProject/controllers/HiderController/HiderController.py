@@ -214,6 +214,11 @@ f = 0
 a = 0
 ncount = 0
 caughtTimer = 0
+
+previousaa = 0
+aa = 0
+
+Bearing_Error = 0
 # Main loop:
 # - perform simulation steps until Webots is stopping the controller
 while robot.step(SIM_TIMESTEP) != -1:
@@ -426,7 +431,7 @@ while robot.step(SIM_TIMESTEP) != -1:
             sCount = sCount + 1
             #sets up a counter variable for the number of points in the path reached
             pc = 0
-            
+            #print(len(path))
             #with the gotten path enter the next state being the follower
             state = "Path_follower"
         
@@ -450,91 +455,127 @@ while robot.step(SIM_TIMESTEP) != -1:
             
             #print("Path Follower")
             
-            gain = .04
+            gain = .05
             f = f+1 
 
         
         if(pc < len(PathPoints)):
         
            
+            
             #get the distance from the robot to the next point
             Dist_Error = math.sqrt(((pose_x - PathPoints[pc][0])**2) + ((pose_y - (PathPoints[pc][1]))**2))
-       
-            #get the difference between the robots angle and the position of the next point
-            Bearing_Error = math.atan2((PathPoints[pc][1] - pose_y) , (PathPoints[pc][0] - pose_x)) - worldtheta
+            Bearing_Error = math.atan2((PathPoints[pc][1] - pose_y) , (PathPoints[pc][0] - pose_x)) 
         
-
+            if(abs(previousaa) - abs(aa) < .1):
+                aa = previousaa
+            else:
+                aa = Bearing_Error
            
-            print("Dist Error: ", Dist_Error)
-            
-            print("Bearing_Error: ", Bearing_Error)
+            previousaa = aa
+            # if(abs(previous_aa - aa) > math.pi):
+                # aa = -aa
 
  
             xR = Dist_Error
-            thetaR = Bearing_Error
-           
+            #thetaR = aa
             
-            #if the robot is a certain distance from the next point
+            if(pose_theta > math.pi):
+                pose_theta -= 2*math.pi
+            
+               
+            #get the difference between the robots angle and the position of the next point
+            
+            thetaR = aa + pose_theta + math.pi/2
+
+            # #if the robot is a certain distance from the next point
             if(Dist_Error > gain):
+            
+                if(abs(thetaR)>.5):
+                    new = 0
+                    dtheta = -10*thetaR
+                else:
+                    new = 5*Dist_Error
+                    dtheta = -2*thetaR
+                    
+                
+                    
+                vL = (new - (dtheta*(EPUCK_AXLE_DIAMETER/2)))
+                vR = (new + (dtheta*(EPUCK_AXLE_DIAMETER/2)))
+                
+               
+                if(vL > MAX_SPEED/4):
+                    vL = MAX_SPEED/4
+                elif(vL < -MAX_SPEED/4):
+                    vL = -MAX_SPEED/4
+                    
+                if(vR > MAX_SPEED/4):
+                    vR = MAX_SPEED/4
+                elif(vL < -MAX_SPEED/4):
+                    vR = -MAX_SPEED/4
+                
+                print("WorldTheta: ", pose_theta,"Bearing_Error: ",Bearing_Error," ThetaR: ", thetaR," New: ", new," dtheta: ", dtheta , " VL: ", vL, "VR: ", vR)
+                  
                 #print(a)
-                #this handles if the robot is bouncing back and forth between two bearing errors then it will rotate a direction for a small amount of time
-                if(a < 5000):
-                    #if the robot is too far rotated in the negative direction turn left
-                    if(Bearing_Error <-.2):
+                # #this handles if the robot is bouncing back and forth between two bearing errors then it will rotate a direction for a small amount of time
+                # if(a < 5000):
+                    # #if the robot is too far rotated in the negative direction turn left
+                    # if(thetaR<-.5):
                            
                     
-                        if(abs(thetaR * MAX_SPEED * xR) > MAX_SPEED):
-                            vR = MAX_SPEED/4
-                        else:
-                            vR = abs(thetaR * MAX_SPEED * xR)/4
-                        vL = -vR
-                        a = a + 1 
-                    #if the robot is to far turned in the positive direction then turn right         
-                    elif(Bearing_Error >.2):
+                        # if(abs(thetaR * MAX_SPEED * xR) > MAX_SPEED):
+                            # vR = MAX_SPEED/4
+                        # else:
+                            # vR = abs(thetaR * MAX_SPEED * xR)/4
+                        # vL = -vR
+                        # a = a + 1 
+                    # #if the robot is to far turned in the positive direction then turn right         
+                    # elif(thetaR >.5):
                         
                 
-                        if(abs(thetaR * MAX_SPEED * xR) > MAX_SPEED):
-                            vL = MAX_SPEED/4
-                        else:
-                            vL = abs(thetaR * MAX_SPEED * xR)/4
+                        # if(abs(thetaR * MAX_SPEED * xR) > MAX_SPEED):
+                            # vL = MAX_SPEED/4
+                        # else:
+                            # vL = abs(thetaR * MAX_SPEED * xR)/4
     
                         
-                        vR = -vL
+                        # vR = -vL
                 
-                        a = a + 1
-                    #if the bearing error is in an acceptable range drive straight
-                    else:    
-                        #reset the count to make sure the robot doesn't get stuck jittering
-                        a = 0
-                        if(xR*MAX_SPEED > MAX_SPEED):
+                        # a = a + 1
+                    # #if the bearing error is in an acceptable range drive straight
+                    # else:    
+                        # #reset the count to make sure the robot doesn't get stuck jittering
+                        # a = 0
+                        # if(xR*MAX_SPEED > MAX_SPEED):
     
-                            vL = MAX_SPEED/2
-                            vR = MAX_SPEED/2
-                        else:
-                            #makes sure the robot drives slower the closer it gets to the next point
-                            vL = xR*MAX_SPEED/2
-                            vR = xR*MAX_SPEED/2
-                #if the robot has been stuck for a certain length of time then choose a random direction and turn that set direction
-                else:
-                    #gets a random direction to turn and then turn said direction
-                    if(ncount == 0):
-                        x = random.randint(0,1)
+                            # vL = MAX_SPEED/2
+                            # vR = MAX_SPEED/2
+                        # else:
+                            # #makes sure the robot drives slower the closer it gets to the next point
+                            # vL = xR*MAX_SPEED/2
+                            # vR = xR*MAX_SPEED/2
+                # #if the robot has been stuck for a certain length of time then choose a random direction and turn that set direction
+                # else:
+                    # #gets a random direction to turn and then turn said direction
+                    # if(ncount == 0):
+                        # x = random.randint(0,1)
                     
-                    if(x % 2 == 0):
-                        vL = (MAX_SPEED/4)
-                        vR = (-MAX_SPEED/4)
-                        #print("right") 
-                    else:
-                        vL = (-MAX_SPEED/4)
-                        vR = (MAX_SPEED/4)
-                        #print("left")
+                    # if(x % 2 == 0):
+                        # vL = (MAX_SPEED/4)
+                        # vR = (-MAX_SPEED/4)
+                        # #print("right") 
+                    # else:
+                        # vL = (-MAX_SPEED/4)
+                        # vR = (MAX_SPEED/4)
+                        # #print("left")
                     
-                    ncount = ncount + 1
+                    # ncount = ncount + 1
                         
-                    if(ncount >= 50):
-                        ncount = 0
-                        a = 0
+                    # if(ncount >= 50):
+                        # ncount = 0
+                        # a = 0
                         
+                 
 
             #if the robot has reached the desired point then set speed to 0 and get the next point skipping a few points to speed up driving
             else:

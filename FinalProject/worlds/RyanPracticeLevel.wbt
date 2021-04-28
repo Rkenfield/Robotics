@@ -7,8 +7,8 @@ WorldInfo {
   coordinateSystem "NUE"
 }
 Viewpoint {
-  orientation 0.0007335852401409503 0.9335339307331426 0.35848830109589824 3.145413285267953
-  position 0.9433102355157625 4.745492015318254 -3.245814592353116
+  orientation -0.23193157654060823 0.897210237011856 0.3757945374862667 2.1301769091505505
+  position 4.379941596257326 4.526079060416062 -0.9856267535701377
 }
 TexturedBackground {
 }
@@ -62,7 +62,10 @@ DEF EPUCK E-puck {
     }
     GPS {
     }
-    E-puckGroundSensors {
+    Receiver {
     }
   ]
+}
+E-puck {
+  translation 1.82 0 0.46
 }
