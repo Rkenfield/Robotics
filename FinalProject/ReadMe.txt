@@ -25,3 +25,15 @@ Instructions for running final project:
 			-The program is done when the console prints out Hider has exited
 
 			-PS. If you don't want to see the Seeker epuck interupt the Hider epucks behaviour feel free to drag the epuck that starts on the left out of the arena and set the variable in TempSeekerController at line 21 to anything
+
+
+Caitlyn's Contributions:
+
+We ran out of time to implement our levels together. However, we have separate levels to show our individual work.
+To run my code:
+	- open up the worlds file and open CaitlynsLevel.wbt in Webots
+	- open up the mavic2pro.py controller
+	- hit play
+	- since the keyboard commands sometimes work, you can test them using your keyboard. make sure to click in the 3D window to gain access
+
+If it is running correctly, there will be a "Starting the drone..." message in the console, followed by a menu with the options for keyboard commands. Again, to use these please make sure to click in the 3D window. Without key commands received, the drone will fly up, then down again within the map. It will then fly upwards again, then down to the beam exposed out of the map, but it will ascend before hitting it. If you zoom out more, you will see that the drone continues to fly from the map in an upward wave pattern.

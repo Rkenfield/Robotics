@@ -62,6 +62,8 @@ gyro = Gyro("gyro")
 gyro.enable(timestep)
 camera_roll_motor = robot.getDevice("camera roll")
 camera_pitch_motor = robot.getDevice("camera pitch")
+keyboard = Keyboard()
+keyboard.enable(timestep)
 
 print("Starting drone...")
 
@@ -70,6 +72,17 @@ print("Starting drone...")
 while robot.step(timestep) != -1:
     if (robot.getTime() > 1.0):
         break
+        
+ #Display control menu
+print("Use these keys to control the drone: ")
+print("- 'up': move forward.")
+print("- 'down': move backward.")
+print("- 'right': turn right.")
+print("- 'left': turn left.")
+print("- 'shift + up': increase the target altitude.")
+print("- 'shift + down': decrease the target altitude.")
+print("- 'shift + right': strafe right.")
+print("- 'shift + left': strafe left.")
         
 k_vertical_thrust = 68.5 
 k_vertical_offset = 0.6
@@ -92,18 +105,51 @@ while robot.step(timestep) != -1:
     Motor.setPosition(camera_roll_motor, -0.115 * roll_acceleration)
     Motor.setPosition(camera_pitch_motor, -0.1 * pitch_acceleration)
     
+    roll_disturbance = 0.0
+    pitch_disturbance = 0.0
+    yaw_disturbance = 0.0
+    key = Keyboard.getKey(keyboard)
+    while (key > 0):
+        if key == keyboard.UP:
+            pitch_disturbance = 2.0
+
+        elif key == keyboard.DOWN:
+            pitch_disturbance = -2.0
+ 
+        elif key == keyboard.RIGHT:
+            yaw_disturbance = 1.3
+      
+        elif key == keyboard.LEFT:
+            yaw_disturbance = -1.3
+     
+        elif keyboard.SHIFT + keyboard.RIGHT:
+            roll_disturbance = -1.0
+          
+        elif keyboard.SHIFT + keyboard.LEFT:
+            roll_disturbance = 1.0
+         
+        elif keyboard.SHIFT + keyboard.UP:
+            target_altitude += 0.05
+            print("target altitude: ", target_altitude)
+
+        elif keyboard.SHIFT + keyboard.DOWN:
+            target_altitude -= 0.05
+            print("target altitude: ", target_altitude)
+  
+        key = Keyboard.getKey(keyboard)
+    
     #Computing roll, pitch, yaw, and vertical inputs
     roll_input = k_roll_p * CLAMP(roll, -1.0, 1.0) + roll_acceleration
     pitch_input = k_pitch_p * CLAMP(pitch, -1.0, 1.0) - pitch_acceleration
-    #yaw_input = yaw_disturbance
+    yaw_input = yaw_disturbance
     clamped_difference_altitude = CLAMP(target_altitude - altitude + k_vertical_offset, -1.0, 1.0)
     vertical_input = k_vertical_p * pow(clamped_difference_altitude, 3.0)
     
     #Actuate motors, taking into consideration all computed inputs ^^
-    front_left_motor_input = k_vertical_thrust + vertical_input - roll_input - pitch_input
-    front_right_motor_input = k_vertical_thrust + vertical_input + roll_input - pitch_input
-    rear_left_motor_input = k_vertical_thrust + vertical_input - roll_input + pitch_input
-    rear_right_motor_input = k_vertical_thrust + vertical_input + roll_input + pitch_input
+    front_left_motor_input = k_vertical_thrust + vertical_input - roll_input - pitch_input + yaw_input
+    front_right_motor_input = k_vertical_thrust + vertical_input + roll_input - pitch_input - yaw_input
+    rear_left_motor_input = k_vertical_thrust + vertical_input - roll_input + pitch_input - yaw_input
+    rear_right_motor_input = k_vertical_thrust + vertical_input + roll_input + pitch_input + yaw_input
     frontLeftMotor.setVelocity(front_left_motor_input);
     frontRightMotor.setVelocity(-front_right_motor_input);
     backLeftMotor.setVelocity(-rear_left_motor_input);
