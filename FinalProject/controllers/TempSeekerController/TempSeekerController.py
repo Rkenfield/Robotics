@@ -1,3 +1,5 @@
+#Created by Ryan Kenfield
+
 import math
 import time
 import random
@@ -78,22 +80,14 @@ count = 0
 # - perform simulation steps until Webots is stopping the controller
 while robot.step(SIM_TIMESTEP) != -1:
     # Read the sensors:
-   
+    #constantly emits a signal in a certain range sending a string to the receiver
     emitter.send(str.encode("close"))
     lidar_sensor_readings = lidar.getRangeImage()
-    #draws where epuck is in the display
-   
-    #use gps to track position of epuck
-   
-    # Process sensor data here.
+  
     
-    # print("Pose X: ", pose_x)
-    # print("Pose Y: ",pose_y)
-    
-    #mapping mode for the epuck 
+    #mode for the epuck to drive around and "seek" the other Epuck
     if(state == "seek"):
-        #Timer for how long the explore function of the robot works for
-        
+       
             #Reads through the lidar readings  
         for i, rho in enumerate(lidar_sensor_readings):
             alpha = lOffsets[i]
@@ -101,8 +95,7 @@ while robot.step(SIM_TIMESTEP) != -1:
             if rho > LIDAR_SENSOR_MAX_RANGE:
                 rho = LIDAR_SENSOR_MAX_RANGE
 
-            
-            #Get the world position for the end of the lidar beam             
+           
           
           
        
@@ -164,7 +157,7 @@ while robot.step(SIM_TIMESTEP) != -1:
            
         
         
-         
+    #if the seeker is ever in non seek mode stop   
     else:
         vL = 0
         vR = 0

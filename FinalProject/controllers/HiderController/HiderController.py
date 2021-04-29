@@ -2,6 +2,9 @@
 
 # You may need to import some classes of the controller module. Ex:
 #  from controller import Robot, Motor, DistanceSensor
+
+#Created by Ryan Kenfield
+
 import math
 import time
 import random
@@ -210,7 +213,8 @@ tick = 0
 map = np.zeros((360,360))
 count = 0
 
-goalPoints = [(.38,1.65),(1,1)]
+goalPoints = [(.38,1.65)]
+#numerous counter variables for different timers on behaviours 
 sCount = 0
 timer = 0
 f = 0
@@ -248,17 +252,24 @@ while robot.step(SIM_TIMESTEP) != -1:
     
     # print("Pose X: ", pose_x)
     # print("Pose Y: ",pose_y)
+    
+    #receives the signal from the seeker Epuck when in a certain range to the seeker
+    #if there is a message from the seeker telling the hider it has gotten too close the hider will go to its caught and flee state
     if(receiver.getQueueLength() > 0 and receiver.getQueueLength() < 2):
+        #flag to ensure single trigger per overlap
         if(c != 0):
             msg = receiver.getData()
             state = "caught"
             c = 0
-            #print("caught")
+            
+            #empties out the duplicate messages from the seeker to the hider
             receiver.nextPacket()
     else:
+        #flag to ensure single trigger per exit of overlap
         if(c != 1):
             #print("No connection")
             c = 1
+        #empties out the duplicate messages from the seeker to the hider
         receiver.nextPacket()
      
            
@@ -282,29 +293,20 @@ while robot.step(SIM_TIMESTEP) != -1:
                         
                 wx = abs((xr*math.cos(worldtheta)) + (yr*math.sin(worldtheta)) + pose_x)
                 wy = abs((yr*math.cos(worldtheta)) - (xr*math.sin(worldtheta)) + pose_y)
-        
+                
+                #cap the end of the lidar lazers to the end of the map
                 if(wx > 2):
                     wx = 2
                 if(wy > 2):
                     wy = 2        
                
-                # if(i == 10):
-                
-                    # print("X: ",360-int(wx*180))
-                    # print("y: ",360-int(wy*180) )
-                
-                
     
                 
                 
                 
                 #Tracks when obstacles get within a certain range to the epuck
                 if rho < 0.15*LIDAR_SENSOR_MAX_RANGE:
-        
-                    #display.setColor(0X0000FF)
-                    #display.drawPixel(360-int(wy*30),int(wx*30))
-                    #display.drawPixel(int((wx + 1)*180),int((wy + 1)*180))
-                    
+       
                     #ensures the measurement of the lidar is within the bounds of the map
                     if(abs(int(wx*180) ) < 360 and abs(int(wy*180) ) < 360):
                         #if the spot in the map is not already at max increment the value
@@ -463,51 +465,52 @@ while robot.step(SIM_TIMESTEP) != -1:
         
         #if it is the first time entering the follower for the current path
         if(f == 0):
+            #draw the path in the display
             for i in PathPoints:
                 display.setColor(0XFFFFFF)
                 display.drawPixel(360-int((i[0]*180)),int(360 - (i[1]*180)))
-                #print(i)
-            # #plt.scatter(path[:,1],path[:,0])   
-                
-            # #plt.show()
-            
-            #print("Path Follower")
+           
             
             gain = .05
             f = f+1 
 
-        
+        #counter for each point in path
         if(pc < len(PathPoints)):
         
            
             
             #get the distance from the robot to the next point
             Dist_Error = math.sqrt(((pose_x - PathPoints[pc][0])**2) + ((pose_y - (PathPoints[pc][1]))**2))
+            #get error in angle
             Bearing_Error = math.atan2((PathPoints[pc][1] - pose_y) , (PathPoints[pc][0] - pose_x)) 
-        
+            
+            #attempt to ensure the bearing error doesn't flip back and forth between positive and negative reading of the same value
             if(abs(previousaa) - abs(aa) < .1):
                 aa = previousaa
             else:
                 aa = Bearing_Error
            
+               
             previousaa = aa
+            #attempt to ensure that bearing flips to opposite reading if it spins too far
             if(abs(previousaa - aa) > math.pi):
                 aa = -aa
 
  
             xR = Dist_Error
             #thetaR = aa
-            
-            # if(pose_theta > math.pi):
-                # pose_theta -= 2*math.pi
+            #if rotation is passed pi then get the difference 
+            if(pose_theta > math.pi):
+                pose_theta -= 2*math.pi
             
                
-            #get the difference between the robots angle and the position of the next point
             
+            #attempt to get the correct difference between epuck and point
             thetaR = aa + pose_theta + math.pi/2 
             # #if the robot is a certain distance from the next point
             if(Dist_Error > gain):
-            
+                #acceptance value for the rotation error tells whether to turn left or right
+                #code below gotten with help from Anuj and Shivendra in order to fix Compass issues in Webots
                 if(abs(thetaR)>.5):
                     new = 0
                     dtheta = -10*thetaR
@@ -516,11 +519,11 @@ while robot.step(SIM_TIMESTEP) != -1:
                     dtheta = -2*thetaR
                     
                 
-                    
+                #set vL and vR based on above set issues    
                 vL = (new - (dtheta*(EPUCK_AXLE_DIAMETER/2)))
                 vR = (new + (dtheta*(EPUCK_AXLE_DIAMETER/2)))
                 
-               
+                #cap max speed
                 if(vL > MAX_SPEED/4):
                     vL = MAX_SPEED/4
                 elif(vL < -MAX_SPEED/4):
@@ -531,7 +534,8 @@ while robot.step(SIM_TIMESTEP) != -1:
                 elif(vL < -MAX_SPEED/4):
                     vR = -MAX_SPEED/4
                 
-                print("WorldTheta: ", pose_theta,"Bearing_Error: ",Bearing_Error," ThetaR: ", thetaR," New: ", new," dtheta: ", dtheta , " VL: ", vL, "VR: ", vR)
+                #angle debug line
+                #print("WorldTheta: ", pose_theta,"Bearing_Error: ",Bearing_Error," ThetaR: ", thetaR," New: ", new," dtheta: ", dtheta , " VL: ", vL, "VR: ", vR)
                   
                 
                  
@@ -557,7 +561,7 @@ while robot.step(SIM_TIMESTEP) != -1:
         rightMotor.setVelocity(vR)                 
     
     
-    #the supervisor is supposed to trigger this state telling the Epuck when it has been caught
+    #when seeker tells hider that it has gotten too close caught state is entered
     elif(state == "caught"):
         #In caught state the epucks lights will turn on and it will spin in place for a certain amount of time
         if(caughtTimer == 0):
