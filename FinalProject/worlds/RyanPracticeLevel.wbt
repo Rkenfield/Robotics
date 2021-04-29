@@ -7,8 +7,8 @@ WorldInfo {
   coordinateSystem "NUE"
 }
 Viewpoint {
-  orientation -0.23193157654060823 0.897210237011856 0.3757945374862667 2.1301769091505505
-  position 4.379941596257326 4.526079060416062 -0.9856267535701377
+  orientation 0.05102995356215685 0.7053022247863786 0.7070676880969946 3.243309937826389
+  position 1.9308030354792232 7.490461005435715 0.7581075250595648
 }
 TexturedBackground {
 }
@@ -32,7 +32,7 @@ WoodenBox {
   size 2 0.1 0.1
 }
 WoodenBox {
-  translation 1.65836 0.05 0.702204
+  translation 1.58899 0.05 0.711409
   rotation 0 -1 0 1.43896
   name "wooden box(3)"
   size 1 0.1 0.1
@@ -46,7 +46,7 @@ WoodenBox {
 DEF EPUCK E-puck {
   translation 1 -6.34971e-05 1
   rotation 0.00030106179978150354 0.9999999321174318 -0.00021243098814004984 0
-  name "e-puck(1)"
+  name "Hider"
   controller "HiderController"
   turretSlot [
     Display {
@@ -63,9 +63,26 @@ DEF EPUCK E-puck {
     GPS {
     }
     Receiver {
+      name "receiver1"
+      channel 1
     }
   ]
 }
-E-puck {
-  translation 1.82 0 0.46
+DEF EPUCK E-puck {
+  translation 1.85 -6.34971e-05 1.1
+  rotation 0 1 0 3.14159
+  name "Seeker"
+  controller "TempSeekerController"
+  turretSlot [
+    Lab4RobotisLds01 {
+      enablePhysics FALSE
+    }
+  ]
+  groundSensorsSlot [
+    Emitter {
+      name "emitter1"
+      range 0.2
+      channel 1
+    }
+  ]
 }

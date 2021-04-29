@@ -51,6 +51,8 @@ rightMotor.setVelocity(0.0)
 
 led = robot.getDevice('led0')
 
+receiver = robot.getDevice('receiver')
+
 # get the time step of the current world.
 SIM_TIMESTEP = int(robot.getBasicTimeStep())
 
@@ -86,6 +88,7 @@ gps.enable(SIM_TIMESTEP)
 compass = robot.getDevice("compass")
 compass.enable(SIM_TIMESTEP)
 
+receiver.enable(SIM_TIMESTEP)
 
 
 #path planner function A*
@@ -217,7 +220,7 @@ caughtTimer = 0
 
 previousaa = 0
 aa = 0
-
+c = 0
 Bearing_Error = 0
 # Main loop:
 # - perform simulation steps until Webots is stopping the controller
@@ -245,6 +248,21 @@ while robot.step(SIM_TIMESTEP) != -1:
     
     # print("Pose X: ", pose_x)
     # print("Pose Y: ",pose_y)
+    if(receiver.getQueueLength() > 0 and receiver.getQueueLength() < 2):
+        if(c != 0):
+            msg = receiver.getData()
+            state = "caught"
+            c = 0
+            #print("caught")
+            receiver.nextPacket()
+    else:
+        if(c != 1):
+            #print("No connection")
+            c = 1
+        receiver.nextPacket()
+     
+           
+    
     
     #mapping mode for the epuck 
     if(state == "Explore"):
@@ -473,21 +491,20 @@ while robot.step(SIM_TIMESTEP) != -1:
                 aa = Bearing_Error
            
             previousaa = aa
-            # if(abs(previous_aa - aa) > math.pi):
-                # aa = -aa
+            if(abs(previous_aa - aa) > math.pi):
+                aa = -aa
 
  
             xR = Dist_Error
             #thetaR = aa
             
-            if(pose_theta > math.pi):
-                pose_theta -= 2*math.pi
+            # if(pose_theta > math.pi):
+                # pose_theta -= 2*math.pi
             
                
             #get the difference between the robots angle and the position of the next point
             
-            thetaR = aa + pose_theta + math.pi/2
-
+            thetaR = aa + worldtheta + math.pi/2 
             # #if the robot is a certain distance from the next point
             if(Dist_Error > gain):
             
@@ -516,65 +533,7 @@ while robot.step(SIM_TIMESTEP) != -1:
                 
                 print("WorldTheta: ", pose_theta,"Bearing_Error: ",Bearing_Error," ThetaR: ", thetaR," New: ", new," dtheta: ", dtheta , " VL: ", vL, "VR: ", vR)
                   
-                #print(a)
-                # #this handles if the robot is bouncing back and forth between two bearing errors then it will rotate a direction for a small amount of time
-                # if(a < 5000):
-                    # #if the robot is too far rotated in the negative direction turn left
-                    # if(thetaR<-.5):
-                           
-                    
-                        # if(abs(thetaR * MAX_SPEED * xR) > MAX_SPEED):
-                            # vR = MAX_SPEED/4
-                        # else:
-                            # vR = abs(thetaR * MAX_SPEED * xR)/4
-                        # vL = -vR
-                        # a = a + 1 
-                    # #if the robot is to far turned in the positive direction then turn right         
-                    # elif(thetaR >.5):
-                        
                 
-                        # if(abs(thetaR * MAX_SPEED * xR) > MAX_SPEED):
-                            # vL = MAX_SPEED/4
-                        # else:
-                            # vL = abs(thetaR * MAX_SPEED * xR)/4
-    
-                        
-                        # vR = -vL
-                
-                        # a = a + 1
-                    # #if the bearing error is in an acceptable range drive straight
-                    # else:    
-                        # #reset the count to make sure the robot doesn't get stuck jittering
-                        # a = 0
-                        # if(xR*MAX_SPEED > MAX_SPEED):
-    
-                            # vL = MAX_SPEED/2
-                            # vR = MAX_SPEED/2
-                        # else:
-                            # #makes sure the robot drives slower the closer it gets to the next point
-                            # vL = xR*MAX_SPEED/2
-                            # vR = xR*MAX_SPEED/2
-                # #if the robot has been stuck for a certain length of time then choose a random direction and turn that set direction
-                # else:
-                    # #gets a random direction to turn and then turn said direction
-                    # if(ncount == 0):
-                        # x = random.randint(0,1)
-                    
-                    # if(x % 2 == 0):
-                        # vL = (MAX_SPEED/4)
-                        # vR = (-MAX_SPEED/4)
-                        # #print("right") 
-                    # else:
-                        # vL = (-MAX_SPEED/4)
-                        # vR = (MAX_SPEED/4)
-                        # #print("left")
-                    
-                    # ncount = ncount + 1
-                        
-                    # if(ncount >= 50):
-                        # ncount = 0
-                        # a = 0
-                        
                  
 
             #if the robot has reached the desired point then set speed to 0 and get the next point skipping a few points to speed up driving
@@ -688,14 +647,17 @@ while robot.step(SIM_TIMESTEP) != -1:
             rightMotor.setVelocity(vR)   
         
         else:
+            #counter variable for the 
+            c = 1
             #after done fleeing then re enter the path finder state to find a path from the epucks current position to the next goal point
-            state = "Path_finder"
+            state = "Explore"
     #when the epuck has completed all goals then the system is done              
     else:
         vL = 0
         vR = 0
         leftMotor.setVelocity(vL)
         rightMotor.setVelocity(vR)   
+        print("Hider has exited")
     
     
     
