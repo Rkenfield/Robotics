@@ -491,7 +491,7 @@ while robot.step(SIM_TIMESTEP) != -1:
                 aa = Bearing_Error
            
             previousaa = aa
-            if(abs(previous_aa - aa) > math.pi):
+            if(abs(previousaa - aa) > math.pi):
                 aa = -aa
 
  
@@ -504,7 +504,7 @@ while robot.step(SIM_TIMESTEP) != -1:
                
             #get the difference between the robots angle and the position of the next point
             
-            thetaR = aa + worldtheta + math.pi/2 
+            thetaR = aa + pose_theta + math.pi/2 
             # #if the robot is a certain distance from the next point
             if(Dist_Error > gain):
             

@@ -16,7 +16,7 @@ pose_y = 1
 pose_theta = 0
 
 #Controls the state machine for the epuck
-state = ""
+state = "seek"
 
 
 # ePuck Constants
