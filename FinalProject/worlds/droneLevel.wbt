@@ -1,0 +1,101 @@
+#VRML_SIM R2021a utf8
+WorldInfo {
+  info [
+    "The model of the E-puck robot"
+  ]
+  title "E-puck simulation"
+  coordinateSystem "NUE"
+}
+Viewpoint {
+  orientation -0.04909233487523614 0.9718283886240727 0.23052011999137068 2.7334276815432443
+  position 6.321613533927845 6.539485262576967 -11.00465793239935
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  translation 1 0 1
+  floorSize 2 2
+  floorTileSize 1 1
+  wallHeight 0.2
+}
+WoodenBox {
+  translation 0.534605 0.05 1.26209
+  rotation 0 1 0 -0.023595307179586023
+  size 1.5 0.1 0.1
+}
+WoodenBox {
+  translation 2.03444 0.05 1.54115
+  rotation 0 1 0 -3.0097553071795864
+  name "wooden box(2)"
+  size 2 0.1 0.1
+}
+WoodenBox {
+  translation 1.58899 0.05 0.711409
+  rotation 0 -1 0 1.43896
+  name "wooden box(3)"
+  size 1 0.1 0.1
+}
+WoodenBox {
+  translation 0.143945 0.05 0.314508
+  rotation 0 1 0 5.36782
+  name "wooden box(4)"
+  size 0.1 0.1 0.1
+}
+DEF EPUCK E-puck {
+  translation 1 -6.34971e-05 1
+  rotation 0.00030106179978150354 0.9999999321174318 -0.00021243098814004984 0
+  name "Hider"
+  controller "HiderController"
+  turretSlot [
+    Display {
+      width 360
+      height 360
+    }
+    Lab4RobotisLds01 {
+      enablePhysics FALSE
+    }
+  ]
+  groundSensorsSlot [
+    Compass {
+    }
+    GPS {
+    }
+    Receiver {
+      name "receiver1"
+      channel 1
+    }
+  ]
+}
+DEF EPUCK E-puck {
+  translation 1.85 -6.34971e-05 1.1
+  rotation 0 1 0 3.14159
+  name "Seeker"
+  controller "TempSeekerController"
+  turretSlot [
+    Lab4RobotisLds01 {
+      enablePhysics FALSE
+    }
+  ]
+  groundSensorsSlot [
+    Emitter {
+      name "emitter1"
+      range 0.2
+      channel 1
+    }
+  ]
+}
+Mavic2Pro {
+  translation 0.83 0.0900012 0.69
+  rotation 1 0 0 -1.5707953071795862
+  cameraSlot [
+    Camera {
+      rotation 1 0 0 -1.68141
+      width 400
+      height 240
+      recognition Recognition {
+      }
+    }
+  ]
+}
